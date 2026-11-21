@@ -1,6 +1,34 @@
+-- =============================================================
+-- KARÉLLE — Modeling Course | Seed Data (data dummy untuk demo)
+-- =============================================================
+-- Jalankan SETELAH schema.sql, di database kar_class_db.
+--
+-- Aman dijalankan ulang: setiap INSERT memakai ID tetap dan
+-- ON CONFLICT DO NOTHING, sehingga data tidak terduplikasi.
+-- Untuk mengembalikan data demo ke kondisi awal, jalankan
+-- schema.sql lalu seed.sql lagi.
+--
+-- Password akun dummy sudah di-hash dengan bcryptjs (cost 10).
+-- Hash dibuat dengan: npm run hash-password -- "Admin123!"
+-- Tidak ada password plaintext yang disimpan di database.
+--
+--   Role     Email                Password
+--   -------  -------------------  -----------
+--   Admin    admin@karelle.id     Admin123!
+--   Teacher  karis@karelle.id     Teacher123!   (Runway Modeling)
+--   Teacher  kesia@karelle.id     Teacher123!   (Posing & Photoshoot, Model Portfolio)
+--   Teacher  ivan@karelle.id      Teacher123!   (Casting Preparation; baru di-approve: demo Welcome Teacher)
+--   Student  rina@karelle.id      Student123!   (pengajuan Teacher: PENDING)
+--   Student  puti@karelle.id      Student123!   (punya sertifikat)
+--   Student  nadhifa@karelle.id   Student123!
+--   Student  aisyah@karelle.id    Student123!   (pengajuan Teacher: DITOLAK)
+-- =============================================================
+
 BEGIN;
 
+-- -------------------------------------------------------------
 -- 1. Users
+-- -------------------------------------------------------------
 INSERT INTO users (id, name, username, email, email_verified, role, headline, bio, created_at, updated_at) VALUES
   ('usr_admin', 'Admin KARÉLLE', 'admin', 'admin@karelle.id', TRUE, 'admin', 'Administrator Platform', 'Mengelola pengguna, kelas, dan kategori di KARÉLLE.', NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days'),
   ('usr_karis', 'Karis Kabanga', 'karis.kabanga', 'karis@karelle.id', TRUE, 'teacher', 'Runway Coach & Former Fashion Week Model', 'Berjalan di panggung Jakarta Fashion Week selama 7 musim dan kini melatih model runway profesional.', NOW() - INTERVAL '50 days', NOW() - INTERVAL '50 days'),
@@ -12,8 +40,10 @@ INSERT INTO users (id, name, username, email, email_verified, role, headline, bi
   ('usr_aisyah', 'Nur Aisyah', 'nur.aisyah', 'aisyah@karelle.id', TRUE, 'student', NULL, NULL, NOW() - INTERVAL '15 days', NOW() - INTERVAL '15 days')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 2. Accounts (password hash bcrypt, provider 'credential')
+--    Better Auth: account_id = id user, provider_id = 'credential'
+-- -------------------------------------------------------------
 INSERT INTO accounts (id, user_id, account_id, provider_id, password, created_at, updated_at) VALUES
   ('acc_admin', 'usr_admin', 'usr_admin', 'credential', '$2b$10$M9P3WRwLBHWBR4P8K1Hmze1ZSnwl1drzY3PxHApcRySFMj2wGdTT6', NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days'),
   ('acc_karis', 'usr_karis', 'usr_karis', 'credential', '$2b$10$Fn2oq/1u5rvK8gKqHXy26ueRx9Jj/y99pmvooFq2dM/orfwmrccV.', NOW() - INTERVAL '50 days', NOW() - INTERVAL '50 days'),
@@ -25,8 +55,9 @@ INSERT INTO accounts (id, user_id, account_id, provider_id, password, created_at
   ('acc_aisyah', 'usr_aisyah', 'usr_aisyah', 'credential', '$2b$10$NS.XsJk9636qexCjigpBfuuC2r0rHHC.KRU.YoZ7IeNlVFX9/Ym8.', NOW() - INTERVAL '15 days', NOW() - INTERVAL '15 days')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 3. Pengajuan Teacher
+-- -------------------------------------------------------------
 INSERT INTO teacher_applications (id, user_id, expertise, experience, motivation, status, created_at, approved_at, approved_by)
 VALUES ('40000000-0000-0000-0000-000000000001', 'usr_karis', 'Runway & Catwalk', '7 musim di Jakarta Fashion Week, 3 tahun melatih model.', 'Membantu model baru tampil percaya diri di runway.', 'approved', NOW() - INTERVAL '50 days', NOW() - INTERVAL '49 days', 'usr_admin')
 ON CONFLICT DO NOTHING;
@@ -43,8 +74,9 @@ INSERT INTO teacher_applications (id, user_id, expertise, experience, motivation
 VALUES ('40000000-0000-0000-0000-000000000005', 'usr_aisyah', 'Photoshoot & Posing', 'Belum memiliki pengalaman mengajar.', 'Ingin mencoba mengajar.', 'rejected', NOW() - INTERVAL '5 days', NOW() - INTERVAL '3 days', 'Mohon lengkapi pengalaman mengajar terlebih dahulu.')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 4. Kategori (created_at berurutan agar tampil sesuai urutan program)
+-- -------------------------------------------------------------
 INSERT INTO categories (id, name, slug, description, created_at, updated_at) VALUES
   ('10000000-0000-0000-0000-000000000001', 'Runway & Catwalk', 'runway-catwalk', 'Teknik berjalan di panggung, postur, dan presentasi busana.', NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days'),
   ('10000000-0000-0000-0000-000000000002', 'Photoshoot & Posing', 'photoshoot-posing', 'Pose, ekspresi, dan kerja sama dengan fotografer di depan kamera.', NOW() - INTERVAL '59 days', NOW() - INTERVAL '59 days'),
@@ -52,8 +84,9 @@ INSERT INTO categories (id, name, slug, description, created_at, updated_at) VAL
   ('10000000-0000-0000-0000-000000000004', 'Casting Preparation', 'casting-preparation', 'Persiapan go-see, audisi, dan self-tape untuk lolos casting.', NOW() - INTERVAL '57 days', NOW() - INTERVAL '57 days')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 5. Courses  (start_date & end_date NULL = lifetime access)
+-- -------------------------------------------------------------
 INSERT INTO courses (id, title, slug, description, category_id, teacher_id, start_date, end_date, created_at, updated_at) VALUES
   ('20000000-0000-0000-0000-000000000001', 'Runway Modeling', 'runway-modeling',
    'Kuasai seni berjalan di runway: postur tubuh, langkah dan ritme, cara berbalik di ujung panggung, latihan high heels, hingga etika backstage di fashion show profesional.',
@@ -69,9 +102,11 @@ INSERT INTO courses (id, title, slug, description, category_id, teacher_id, star
    '10000000-0000-0000-0000-000000000004', 'usr_ivan', '2026-11-15', '2027-02-28', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 6. Materi  (isi berupa HTML, ditampilkan sesuai order_index)
-
+--    ON CONFLICT (id): constraint urutan bersifat DEFERRABLE
+--    sehingga tidak bisa dipakai sebagai target ON CONFLICT.
+-- -------------------------------------------------------------
 -- Runway Modeling
 INSERT INTO course_contents (id, course_id, title, content, order_index) VALUES
   ('30000000-0000-0000-0001-000000000001', '20000000-0000-0000-0000-000000000001', 'Mengenal Dunia Runway',
@@ -136,8 +171,11 @@ INSERT INTO course_contents (id, course_id, title, content, order_index) VALUES
    $html$<h2>Bagian dari proses</h2><p>Tidak lolos casting bukan berarti Anda gagal. Klien sering mencari tampilan tertentu. Evaluasi diri, lalu datang ke casting berikutnya.</p>$html$, 6)
 ON CONFLICT (id) DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 7. Enrollment
+--    progress_percent tidak diisi manual: trigger database
+--    menghitungnya otomatis dari tabel lesson_progress.
+-- -------------------------------------------------------------
 INSERT INTO enrollments (id, student_id, course_id, enrolled_at) VALUES
   ('50000000-0000-0000-0000-000000000001', 'usr_puti', '20000000-0000-0000-0000-000000000001', NOW() - INTERVAL '28 days'),
   ('50000000-0000-0000-0000-000000000002', 'usr_puti', '20000000-0000-0000-0000-000000000002', NOW() - INTERVAL '20 days'),
@@ -150,8 +188,9 @@ INSERT INTO enrollments (id, student_id, course_id, enrolled_at) VALUES
   ('50000000-0000-0000-0000-000000000009', 'usr_aisyah', '20000000-0000-0000-0000-000000000004', NOW() - INTERVAL '4 days')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 8. Lesson progress (materi yang sudah ditandai selesai)
+-- -------------------------------------------------------------
 INSERT INTO lesson_progress (enrollment_id, content_id, course_id) VALUES
   ('50000000-0000-0000-0000-000000000001', '30000000-0000-0000-0001-000000000001', '20000000-0000-0000-0000-000000000001'),
   ('50000000-0000-0000-0000-000000000001', '30000000-0000-0000-0001-000000000002', '20000000-0000-0000-0000-000000000001'),
@@ -181,15 +220,19 @@ UPDATE enrollments e
          LIMIT 1)
  WHERE e.last_content_id IS NULL;
 
-
+-- -------------------------------------------------------------
 -- 9. Sertifikat (Puti sudah menyelesaikan 100% "Runway Modeling")
+--    Trigger menolak insert ini jika progress belum 100%.
+--    Nomor tetap agar mudah didemokan di halaman verifikasi.
+-- -------------------------------------------------------------
 INSERT INTO certificates (id, student_id, course_id, certificate_number, student_name, course_title, teacher_name, issued_at)
 VALUES ('60000000-0000-0000-0000-000000000001', 'usr_puti', '20000000-0000-0000-0000-000000000001',
         'KRL-2026-A1B2C3D4E5', 'Puti Amelia', 'Runway Modeling', 'Karis Kabanga', NOW() - INTERVAL '4 days')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 10. Komentar / diskusi
+-- -------------------------------------------------------------
 INSERT INTO comments (id, content_id, user_id, parent_id, body, created_at) VALUES
   ('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0001-000000000001', 'usr_nadhifa', NULL,
    'Apakah boleh berlatih catwalk tanpa high heels di awal?', NOW() - INTERVAL '10 days'),
@@ -201,8 +244,9 @@ INSERT INTO comments (id, content_id, user_id, parent_id, body, created_at) VALU
    'Berapa lama idealnya menahan pose di ujung runway?', NOW() - INTERVAL '2 days')
 ON CONFLICT DO NOTHING;
 
-
+-- -------------------------------------------------------------
 -- 11. Notifikasi
+-- -------------------------------------------------------------
 INSERT INTO notifications (id, user_id, type, title, message, link, is_read, created_at) VALUES
   ('80000000-0000-0000-0000-000000000001', 'usr_ivan', 'teacher_approved', 'Selamat, Anda resmi menjadi Teacher!',
    'Pengajuan Teacher Anda telah disetujui Admin. Mulai buat course pertama Anda.', '/teacher', FALSE, NOW() - INTERVAL '2 hours'),

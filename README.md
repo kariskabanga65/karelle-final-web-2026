@@ -97,6 +97,21 @@ cp .env.example .env.local
 
 Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postgresql://postgres:passwordanda@localhost:5432/kar_class_db`.
 
+## Autentikasi & Keamanan
+
+| Lapisan | Lokasi | Tugas |
+|---|---|---|
+| 1. Middleware | `src/middleware.js` | Cek ada/tidaknya **cookie** session. Tanpa database. Guest diarahkan ke `/login`. |
+| 2. Server | `src/lib/auth/session.js` → `requireRole()` | Validasi session ke database dan cek **role** di setiap halaman, Server Action, dan Route Handler. |
+| 3. Database | Query dengan `WHERE teacher_id = $1` | Memastikan data yang diubah memang milik user tersebut. |
+
+- **Better Auth** menangani register, login, logout, session, dan reset password (`/api/auth/*`).
+- **bcryptjs** dipasang ke Better Auth sebagai fungsi hash/verify password (`src/lib/auth/password.js`).
+- Role **tidak bisa** dikirim dari form register. Semua pendaftar menjadi `student`. Pendaftar Teacher mendapat pengajuan berstatus `pending`.
+- Login dibatasi Better Auth (rate limit) untuk mencegah brute force.
+
+**Forgot Password:** proyek ini belum memakai layanan email, jadi tautan reset password ditampilkan di **terminal** tempat `npm run dev` berjalan. Salin tautan tersebut ke browser.
+
 ## Menjalankan Aplikasi
 
 ```bash

@@ -1,10 +1,25 @@
+-- =============================================================
+-- KARÉLLE — Modeling Course | Database Schema
+-- Database : kar_class_db (PostgreSQL 14+)
+-- =============================================================
+-- Cara menjalankan (pgAdmin):
+--   1. Buat database bernama kar_class_db.
+--   2. Klik kanan kar_class_db > Query Tool.
+--   3. Buka file ini, lalu Execute (F5).
+--   4. Setelah itu jalankan seed.sql.
+--
+-- PERINGATAN: file ini MENGHAPUS semua tabel lalu membuatnya ulang.
+-- Seluruh data lama akan hilang. Jalankan ulang seed.sql sesudahnya.
+-- =============================================================
+
 BEGIN;
 
 -- gen_random_uuid() & gen_random_bytes()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- -------------------------------------------------------------
 -- 0. Bersihkan objek lama (agar file aman dijalankan ulang)
-
+-- -------------------------------------------------------------
 DROP VIEW  IF EXISTS v_course_catalog CASCADE;
 DROP TABLE IF EXISTS notifications        CASCADE;
 DROP TABLE IF EXISTS certificates         CASCADE;
@@ -29,7 +44,11 @@ DROP FUNCTION IF EXISTS generate_certificate_number()       CASCADE;
 DROP FUNCTION IF EXISTS trg_check_certificate_eligibility() CASCADE;
 
 
--- 1. TABEL AUTENTIKASI 
+-- =============================================================
+-- 1. TABEL AUTENTIKASI (mengikuti skema Better Auth 1.7)
+--    ID bertipe TEXT karena dibuat oleh Better Auth.
+-- =============================================================
+
 CREATE TABLE users (
     id              TEXT PRIMARY KEY,
     name            TEXT        NOT NULL,                 -- nama lengkap
@@ -94,7 +113,12 @@ CREATE TABLE verifications (
 );
 
 
+-- =============================================================
 -- 2. PENGAJUAN TEACHER
+--    User mendaftar lewat form "Register as Teacher" -> role tetap
+--    'student', pengajuan disimpan di sini dengan status 'pending'.
+-- =============================================================
+
 CREATE TABLE teacher_applications (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id           TEXT        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -111,6 +135,7 @@ CREATE TABLE teacher_applications (
 
     CONSTRAINT teacher_applications_status_check
         CHECK (status IN ('pending', 'approved', 'rejected')),
+    -- Data harus konsisten dengan status-nya.
     CONSTRAINT teacher_applications_approved_check
         CHECK (status <> 'approved' OR approved_at IS NOT NULL),
     CONSTRAINT teacher_applications_rejected_check
@@ -123,7 +148,10 @@ CREATE UNIQUE INDEX teacher_applications_one_pending_idx
 CREATE INDEX teacher_applications_status_idx ON teacher_applications (status, created_at DESC);
 
 
+-- =============================================================
 -- 3. KATEGORI & COURSE
+-- =============================================================
+
 CREATE TABLE categories (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name         TEXT        NOT NULL,
@@ -161,8 +189,10 @@ CREATE INDEX courses_teacher_id_idx  ON courses (teacher_id);
 CREATE INDEX courses_title_lower_idx ON courses (LOWER(title));
 
 
-
+-- =============================================================
 -- 4. MATERI (COURSE CONTENTS)
+-- =============================================================
+
 CREATE TABLE course_contents (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     course_id    UUID        NOT NULL REFERENCES courses (id) ON DELETE CASCADE,
@@ -182,7 +212,10 @@ CREATE TABLE course_contents (
 );
 
 
+-- =============================================================
 -- 5. ENROLLMENT & PROGRESS
+-- =============================================================
+
 CREATE TABLE enrollments (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id        TEXT          NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -244,8 +277,10 @@ CREATE TABLE comments (
 CREATE INDEX comments_content_id_idx ON comments (content_id, created_at);
 
 
-
+-- =============================================================
 -- 7. SERTIFIKAT
+-- =============================================================
+
 -- Format nomor: KRL-2026-7F3A9C1B2E (10 karakter heksadesimal acak)
 CREATE FUNCTION generate_certificate_number() RETURNS TEXT
 LANGUAGE sql VOLATILE AS $$
@@ -270,7 +305,10 @@ CREATE TABLE certificates (
 );
 
 
+-- =============================================================
 -- 8. NOTIFIKASI
+-- =============================================================
+
 CREATE TABLE notifications (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     TEXT        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -290,8 +328,11 @@ CREATE TABLE notifications (
 CREATE INDEX notifications_user_unread_idx ON notifications (user_id, is_read, created_at DESC);
 
 
+-- =============================================================
 -- 9. FUNCTION & TRIGGER
--- Mengisi updated_at otomatis setiap kali baris di-UPDATE.
+-- =============================================================
+
+-- 9.1 Mengisi updated_at otomatis setiap kali baris di-UPDATE.
 CREATE FUNCTION set_updated_at() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -312,8 +353,8 @@ CREATE TRIGGER enrollments_set_updated_at          BEFORE UPDATE ON enrollments 
 CREATE TRIGGER comments_set_updated_at             BEFORE UPDATE ON comments             FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 
--- Menghitung ulang progress satu enrollment.
--- progress = materi selesai / total materi x 100
+-- 9.2 Menghitung ulang progress satu enrollment.
+--     progress = materi selesai / total materi x 100
 CREATE FUNCTION recalc_enrollment_progress(p_enrollment_id UUID) RETURNS VOID
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -341,8 +382,8 @@ BEGIN
 END;
 $$;
 
--- Menghitung ulang progress semua student di satu course
--- (dipanggil saat materi ditambah atau dihapus).
+-- 9.3 Menghitung ulang progress semua student di satu course
+--     (dipanggil saat materi ditambah atau dihapus).
 CREATE FUNCTION recalc_course_progress(p_course_id UUID) RETURNS VOID
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -354,7 +395,7 @@ BEGIN
 END;
 $$;
 
--- Trigger: Mark as Done (INSERT) / batal (DELETE) -> progress diperbarui.
+-- 9.4 Trigger: Mark as Done (INSERT) / batal (DELETE) -> progress diperbarui.
 CREATE FUNCTION trg_lesson_progress_recalc() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -371,7 +412,7 @@ CREATE TRIGGER lesson_progress_recalc
 AFTER INSERT OR DELETE ON lesson_progress
 FOR EACH ROW EXECUTE FUNCTION trg_lesson_progress_recalc();
 
--- Trigger: materi ditambah/dihapus -> progress semua student diperbarui.
+-- 9.5 Trigger: materi ditambah/dihapus -> progress semua student diperbarui.
 CREATE FUNCTION trg_course_contents_recalc() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -388,7 +429,7 @@ CREATE TRIGGER course_contents_recalc
 AFTER INSERT OR DELETE ON course_contents
 FOR EACH ROW EXECUTE FUNCTION trg_course_contents_recalc();
 
--- Trigger: sertifikat HANYA bisa diterbitkan jika progress = 100%.
+-- 9.6 Trigger: sertifikat HANYA bisa diterbitkan jika progress = 100%.
 CREATE FUNCTION trg_check_certificate_eligibility() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -410,7 +451,10 @@ BEFORE INSERT ON certificates
 FOR EACH ROW EXECUTE FUNCTION trg_check_certificate_eligibility();
 
 
+-- =============================================================
 -- 10. VIEW: ringkasan course untuk homepage & katalog
+-- =============================================================
+
 CREATE VIEW v_course_catalog AS
 SELECT
     c.id,

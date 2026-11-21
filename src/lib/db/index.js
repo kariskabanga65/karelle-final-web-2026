@@ -1,6 +1,18 @@
 import "server-only";
 import { Pool } from "pg";
 
+/**
+ * Koneksi PostgreSQL menggunakan connection pool dari package `pg`.
+ *
+ * - Pool dibuat SEKALI lalu dipakai ulang. Di mode development, Next.js
+ *   memuat ulang modul setiap file berubah, jadi pool disimpan di
+ *   globalThis agar tidak membuat koneksi baru terus-menerus.
+ * - File ini hanya boleh dipakai di server (Server Component, Server
+ *   Action, Route Handler). Import "server-only" memastikan file ini
+ *   tidak pernah ikut terkirim ke browser.
+ * - JANGAN di-import dari src/middleware.js.
+ */
+
 function createPool() {
   if (!process.env.DATABASE_URL) {
     throw new Error(
