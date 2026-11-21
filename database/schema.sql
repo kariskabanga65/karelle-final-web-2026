@@ -1,0 +1,6 @@
+-- =============================================================
+-- KARÉLLE — Modeling Course | Database Schema
+-- Database : kar_class_db (PostgreSQL)
+-- Jalankan file ini SEBELUM seed.sql
+-- =============================================================
+-- Isi lengkap dibuat pada Tahap 2 — Database.

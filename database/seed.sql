@@ -1,0 +1,5 @@
+-- =============================================================
+-- KARÉLLE — Modeling Course | Seed Data (data dummy)
+-- Jalankan file ini SETELAH schema.sql
+-- =============================================================
+-- Isi lengkap dibuat pada Tahap 2 — Database.
