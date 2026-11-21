@@ -1,69 +1,187 @@
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CategoryCard } from "@/components/course/category-card";
+import { TeacherCard } from "@/components/course/teacher-card";
+import { BenefitStrip } from "@/components/home/benefit-strip";
+import { HeroCarousel } from "@/components/home/hero-carousel";
+import { PopularCourseList } from "@/components/home/popular-course-list";
+import { Ribbon } from "@/components/layout/ribbon";
+import { CourseFilters } from "@/components/shared/course-filters";
+import { EmptyState } from "@/components/shared/empty-state";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getCategoriesWithCourseCount, getPlatformStats, getPopularCourses, getProgramCourses } from "@/lib/db/queries/courses";
+import { getEnrollmentMap } from "@/lib/db/queries/enrollments";
+import { getTeachers } from "@/lib/db/queries/teachers";
 
-export default function Home() {
+export const metadata = {
+  title: "KARÉLLE — Modeling Course",
+};
+
+const GALLERY = [
+  { src: "/images/hero-model.jpg", alt: "Model berpose duduk dengan busana hitam", className: "col-span-2 row-span-2", position: "object-[center_70%]" },
+  { src: "/images/categories/runway-catwalk.jpg", alt: "Model berjalan di runway" },
+  { src: "/images/categories/photoshoot-posing.jpg", alt: "Potret model saat photoshoot" },
+  { src: "/images/categories/model-portfolio.jpg", alt: "Foto polaroid untuk portofolio model" },
+  { src: "/images/categories/casting-preparation.jpg", alt: "Kursi sutradara bertuliskan casting" },
+];
+
+export default async function HomePage() {
+  const user = await getCurrentUser();
+  const [programs, categories, popularCourses, teachers, stats, enrollments] = await Promise.all([
+    getProgramCourses(4),
+    getCategoriesWithCourseCount(),
+    getPopularCourses(5),
+    getTeachers({ limit: 3 }),
+    getPlatformStats(),
+    getEnrollmentMap(user?.role === "student" ? user.id : null),
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <HeroCarousel />
+      <BenefitStrip />
+
+      {/* OUR COURSES — Modeling Programs (4 kelas dari database) */}
+      <section aria-labelledby="programs-title" className="mx-auto grid max-w-7xl gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[minmax(0,22rem)_1fr] lg:py-24">
+        <div className="flex flex-col justify-center gap-6">
+          <p className="eyebrow">Our Courses</p>
+          <h2 id="programs-title" className="display-title text-6xl">
+            Modeling <em className="italic">Programs</em>
+          </h2>
+          <p className="text-muted-foreground">
+            Program lengkap untuk mengembangkan kemampuan modeling Anda, dari dasar hingga level profesional.
           </p>
+          <Button asChild size="lg" className="w-fit rounded-sm">
+            <Link href="/courses">View All Courses <ArrowRight /></Link>
+          </Button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {programs.map((course) => (
+            <CategoryCard key={course.id} course={course} />
+          ))}
         </div>
-      </main>
+      </section>
+
+      {/* COURSE TERPOPULER (maksimal 5) + search & filter kategori */}
+      <section aria-labelledby="popular-title" className="border-t bg-card">
+        <div className="mx-auto max-w-7xl space-y-10 px-5 py-20 sm:px-8">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
+            <div className="space-y-5">
+              <p className="eyebrow">Most Popular</p>
+              <h2 id="popular-title" className="display-title text-5xl sm:text-6xl">
+                Popular <em className="italic">Classes</em>
+              </h2>
+            </div>
+            <CourseFilters categories={categories} />
+          </div>
+          {popularCourses.length > 0 ? (
+            <PopularCourseList courses={popularCourses} enrollments={enrollments} />
+          ) : (
+            <EmptyState title="Belum ada course" description="Course yang dibuat Teacher akan tampil di sini." />
+          )}
+        </div>
+      </section>
+
+      {/* WHY CHOOSE KARÉLLE — About */}
+      <section id="about" aria-labelledby="about-title" className="relative scroll-mt-20 overflow-hidden bg-ink text-white">
+        <div className="absolute inset-y-0 left-0 w-full lg:w-3/5 lg:[mask-image:linear-gradient(to_right,black_45%,transparent)]">
+          <Image src="/images/editorial-face.jpg" alt="" fill sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover object-[72%_40%] opacity-30 lg:opacity-100" />
+        </div>
+        <Ribbon flip className="-top-16 right-0 w-[380px] opacity-50" />
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:py-28">
+          <div className="hidden lg:block" />
+          <div className="space-y-7">
+            <p className="eyebrow text-white/80">Why Choose KARÉLLE?</p>
+            <h2 id="about-title" className="font-display text-4xl leading-tight italic sm:text-5xl">
+              More Than a Course, It&apos;s Your Modeling Foundation.
+            </h2>
+            <p className="leading-relaxed text-white/70">
+              KARÉLLE adalah platform kursus modeling berbasis kelas. Setiap kelas dipandu instruktur berpengalaman,
+              tersusun dari materi berurutan, dan dilengkapi forum diskusi serta pelacakan progress belajar.
+            </p>
+            <dl className="grid grid-cols-3 gap-6 border-y border-ink-border py-6">
+              <Stat label="Course" value={stats.course_count} />
+              <Stat label="Instruktur" value={stats.teacher_count} />
+              <Stat label="Student" value={stats.student_count} />
+            </dl>
+            <Button asChild variant="outline-light" size="lg" className="rounded-sm">
+              <Link href="/teachers">Kenali instruktur kami <ArrowRight /></Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED TEACHERS */}
+      <section aria-labelledby="teachers-title" className="mx-auto max-w-7xl space-y-12 px-5 py-20 sm:px-8 lg:py-24">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div className="space-y-5">
+            <p className="eyebrow">Featured Instructors</p>
+            <h2 id="teachers-title" className="display-title text-5xl sm:text-6xl">
+              Learn from the <em className="italic">best</em>
+            </h2>
+          </div>
+          <Button asChild variant="outline" className="rounded-sm">
+            <Link href="/teachers">Semua instruktur <ArrowRight /></Link>
+          </Button>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {teachers.map((teacher) => (
+            <TeacherCard key={teacher.id} teacher={teacher} />
+          ))}
+        </div>
+      </section>
+
+      {/* GALLERY */}
+      <section id="gallery" aria-labelledby="gallery-title" className="scroll-mt-20 bg-card">
+        <div className="mx-auto max-w-7xl space-y-10 px-5 py-20 sm:px-8">
+          <div className="space-y-5">
+            <p className="eyebrow">Gallery</p>
+            <h2 id="gallery-title" className="display-title text-5xl sm:text-6xl">
+              Behind the <em className="italic">lens</em>
+            </h2>
+          </div>
+          <div className="grid auto-rows-[220px] grid-cols-2 gap-3 md:grid-cols-4">
+            {GALLERY.map((photo) => (
+              <figure key={photo.src} className={`relative overflow-hidden rounded-xl bg-ink ${photo.className ?? ""}`}>
+                <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 768px) 25vw, 50vw" className={`object-cover grayscale transition-transform duration-700 hover:scale-105 ${photo.position ?? "object-top"}`} />
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CALL TO ACTION */}
+      <section aria-labelledby="cta-title" className="relative overflow-hidden bg-ink text-white">
+        <Ribbon className="-bottom-36 -left-28 w-[420px] opacity-35" />
+        <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-7 px-5 py-24 text-center sm:px-8">
+          <p className="eyebrow text-white/80">Start Today</p>
+          <h2 id="cta-title" className="display-title text-5xl sm:text-6xl">
+            Ready for your <em className="italic">first walk?</em>
+          </h2>
+          <p className="max-w-xl text-white/70">
+            Daftar gratis sebagai Student untuk mulai belajar, atau ajukan diri sebagai Teacher untuk berbagi keahlian Anda.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button asChild variant="light" size="lg" className="rounded-sm">
+              <Link href="/register/student">Daftar sebagai Student</Link>
+            </Button>
+            <Button asChild variant="outline-light" size="lg" className="rounded-sm">
+              <Link href="/register/teacher">Daftar sebagai Teacher</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function Stat({ label, value }) {
+  return (
+    <div className="flex flex-col-reverse">
+      <dt className="mt-1 text-xs tracking-[0.2em] text-white/55 uppercase">{label}</dt>
+      <dd className="font-display text-4xl">{value}</dd>
     </div>
   );
 }

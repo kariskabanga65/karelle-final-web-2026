@@ -1,7 +1,6 @@
 import "server-only";
 import { queryOne } from "@/lib/db";
 
-/** Pengajuan Teacher terbaru milik seorang user, atau null. */
 export async function getLatestTeacherApplication(userId) {
   return queryOne(
     `SELECT id, expertise, status, approved_at, rejected_at, rejection_reason, created_at,
