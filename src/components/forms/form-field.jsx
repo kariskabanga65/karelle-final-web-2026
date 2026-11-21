@@ -1,29 +1,30 @@
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
 /**
- * Input form sederhana beserta pesan error dari server.
- * (Akan diganti komponen shadcn/ui di Tahap 4.)
+ * Field form (label + input + pesan error dari server).
+ * as="textarea" untuk teks panjang, atau kirim children untuk input khusus.
  */
-export function FormField({ label, name, type = "text", error, as = "input", children, ...props }) {
-  const Component = as;
+export function FormField({ label, name, type = "text", error, as = "input", hint, children, ...props }) {
   const errorId = `${name}-error`;
+  const shared = {
+    id: name,
+    name,
+    "aria-invalid": Boolean(error),
+    "aria-describedby": error ? errorId : undefined,
+    ...props,
+  };
 
   return (
-    <div className="space-y-1">
-      <label htmlFor={name} className="block text-sm font-medium">
-        {label}
-      </label>
-      {children ?? (
-        <Component
-          id={name}
-          name={name}
-          type={as === "input" ? type : undefined}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? errorId : undefined}
-          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#7a1f3d] focus:ring-2 focus:ring-[#7a1f3d]/20"
-          {...props}
-        />
-      )}
+    <div className="space-y-2">
+      <Label htmlFor={name}>{label}</Label>
+      {children ?? (as === "textarea" ? <Textarea {...shared} /> : <Input type={type} {...shared} />)}
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       {error && (
-        <p id={errorId} className="text-sm text-red-600">
+        <p id={errorId} className="text-sm text-destructive">
           {error[0]}
         </p>
       )}
@@ -34,24 +35,23 @@ export function FormField({ label, name, type = "text", error, as = "input", chi
 export function FormMessage({ state }) {
   if (!state?.error && !state?.message) return null;
   const isError = !state.success;
+  const Icon = isError ? AlertCircle : CheckCircle2;
   return (
     <p
       role={isError ? "alert" : "status"}
-      className={`rounded-md px-3 py-2 text-sm ${isError ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}
+      className={`flex items-start gap-2 rounded-md border px-3.5 py-3 text-sm ${isError ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-success/30 bg-success/5 text-success"}`}
     >
+      <Icon className="mt-0.5 size-4 shrink-0" />
       {isError ? state.error : state.message}
     </p>
   );
 }
 
-export function SubmitButton({ pending, children, pendingText = "Memproses..." }) {
+export function SubmitButton({ pending, children, pendingText = "Memproses...", className = "" }) {
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full rounded-md bg-[#7a1f3d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#641832] disabled:opacity-60"
-    >
+    <Button type="submit" size="lg" disabled={pending} className={`w-full rounded-sm ${className}`}>
+      {pending && <Loader2 className="animate-spin" />}
       {pending ? pendingText : children}
-    </button>
+    </Button>
   );
 }
