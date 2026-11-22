@@ -1,4 +1,4 @@
-import { BookOpen, Plus } from "lucide-react";
+import { BookOpen, ListOrdered, Plus } from "lucide-react";
 import Link from "next/link";
 import { CourseTable } from "@/components/dashboard/course-table";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -31,7 +31,16 @@ export default async function AdminCoursesPage({ searchParams }) {
         <Button type="submit" className="h-11">Cari</Button>
       </form>
       {courses.length > 0 ? (
-        <CourseTable courses={courses} basePath="/admin" showTeacher />
+        <CourseTable
+          courses={courses}
+          basePath="/admin"
+          showTeacher
+          extraActions={(course) => (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/teacher/courses/${course.id}/contents`}><ListOrdered /> Materi</Link>
+            </Button>
+          )}
+        />
       ) : (
         <EmptyState icon={BookOpen} title="Course tidak ditemukan" description="Buat course baru atau ubah kata kunci pencarian." />
       )}
