@@ -12,8 +12,8 @@ Kelas yang tersedia: **Runway Modeling**, **Posing & Photoshoot**, **Model Portf
 
 | Bagian | Teknologi |
 |---|---|
-| Frontend | Next.js 16 (App Router, JSX), Tailwind CSS 4, shadcn/ui, Lucide React |
-| Backend | Route Handlers, Server Components, Server Actions, Zod (validasi) |
+| Frontend | Next.js 16 (App Router, JSX), Tailwind CSS 4, shadcn/ui, Lucide React, Tiptap (Rich Text Editor) |
+| Backend | Route Handlers, Server Components, Server Actions, Zod (validasi), sanitize-html (anti-XSS) |
 | Database | PostgreSQL + Raw SQL (`pg`), tanpa ORM |
 | Auth | Better Auth, bcryptjs, `src/middleware.js`, RBAC |
 
@@ -140,8 +140,24 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 - **bcryptjs** dipasang ke Better Auth sebagai fungsi hash/verify password (`src/lib/auth/password.js`).
 - Role **tidak bisa** dikirim dari form register. Semua pendaftar menjadi `student`. Pendaftar Teacher mendapat pengajuan berstatus `pending`.
 - Login dibatasi Better Auth (rate limit) untuk mencegah brute force.
+- Isi materi dari Rich Text Editor **dibersihkan di server** (`src/lib/utils/sanitize.js`) sebelum disimpan: `<script>`, atribut `on*`, dan link `javascript:` dibuang untuk mencegah XSS.
+- Server Action materi menerima `courseId` dari client, jadi kepemilikan course **dicek ulang di setiap aksi**. Request yang dimanipulasi ke course Teacher lain ditolak.
 
 **Forgot Password:** proyek ini belum memakai layanan email, jadi tautan reset password ditampilkan di **terminal** tempat `npm run dev` berjalan. Salin tautan tersebut ke browser.
+
+## Fitur Teacher (Tahap 6)
+
+| Halaman | Fitur |
+|---|---|
+| `/teacher` | Dashboard: jumlah course, materi, student, rata-rata progress, ringkasan per course, aktivitas student terbaru |
+| `/teacher/courses` | Daftar course milik sendiri, buat, edit, dan hapus course |
+| `/teacher/courses/[id]/contents` | Kelola materi: tambah, edit (Rich Text Editor), hapus, dan ubah urutan (naik/turun) |
+| `/teacher/students` | Progress student per course: persentase, jumlah materi selesai, materi terakhir, filter, dan pencarian |
+
+- Urutan materi memakai constraint `UNIQUE (course_id, order_index) DEFERRABLE`, sehingga dua materi bisa bertukar urutan dalam satu transaksi. Setelah materi dihapus, urutan dirapikan kembali menjadi 1, 2, 3, ...
+- Progress student dihitung ulang otomatis oleh **trigger PostgreSQL** saat materi ditambah atau dihapus.
+- Student yang mengikuti course mendapat **notifikasi** saat Teacher menambah materi baru.
+- Admin juga dapat mengelola materi semua course lewat tombol **Materi** di `/admin/courses`.
 
 ## Menjalankan Aplikasi
 
