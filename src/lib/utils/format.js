@@ -39,3 +39,23 @@ export function getCategoryImage(slug) {
   const known = ["runway-catwalk", "photoshoot-posing", "model-portfolio", "casting-preparation"];
   return known.includes(slug) ? `/images/categories/${slug}.jpg` : "/images/hero-model.jpg";
 }
+
+const relativeFormatter = new Intl.RelativeTimeFormat("id-ID", { numeric: "auto" });
+
+/** "3 jam yang lalu", "kemarin", dst. */
+export function formatRelative(value) {
+  if (!value) return "-";
+  const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000);
+  const units = [
+    ["year", 31536000],
+    ["month", 2592000],
+    ["week", 604800],
+    ["day", 86400],
+    ["hour", 3600],
+    ["minute", 60],
+  ];
+  for (const [unit, size] of units) {
+    if (Math.abs(seconds) >= size) return relativeFormatter.format(Math.round(seconds / size), unit);
+  }
+  return "baru saja";
+}
