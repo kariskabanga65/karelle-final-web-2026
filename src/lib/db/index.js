@@ -1,5 +1,9 @@
 import "server-only";
-import { Pool } from "pg";
+import { Pool, types } from "pg";
+
+// Kolom DATE (start_date, end_date) dibaca sebagai teks "YYYY-MM-DD",
+// bukan objek Date, agar tidak bergeser karena zona waktu.
+types.setTypeParser(1082, (value) => value);
 
 /**
  * Koneksi PostgreSQL menggunakan connection pool dari package `pg`.
