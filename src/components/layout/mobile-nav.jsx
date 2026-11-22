@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NAV_LINKS } from "./nav-links";
 
+/** Menu navigasi untuk layar mobile & tablet. */
 export function MobileNav({ user, dashboardPath }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);

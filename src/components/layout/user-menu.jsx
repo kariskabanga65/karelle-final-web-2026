@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { LayoutDashboard, LogOut, UserRound } from "lucide-react";
 import { logoutAction } from "@/actions/auth-actions";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils/format";
 
+/** Menu akun untuk user yang sudah login. */
 export function UserMenu({ user, dashboardPath, roleLabel }) {
   return (
     <DropdownMenu>
@@ -22,6 +23,7 @@ export function UserMenu({ user, dashboardPath, roleLabel }) {
         aria-label="Menu akun"
       >
         <Avatar className="size-8">
+          {user.image && <AvatarImage src={user.image} alt="" className="grayscale" />}
           <AvatarFallback className="bg-white text-xs text-ink">{getInitials(user.name)}</AvatarFallback>
         </Avatar>
         <span className="hidden flex-col leading-tight sm:flex">

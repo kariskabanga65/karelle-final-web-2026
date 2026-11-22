@@ -10,6 +10,10 @@ const ICONS = {
   "casting-preparation": UsersRound,
 };
 
+/**
+ * Kartu bergaya editorial gelap (section "Modeling Programs").
+ * Menerima kategori, atau kelas (course) dengan category_slug.
+ */
 export function CategoryCard({ category, course }) {
   const slug = course ? course.category_slug : category.slug;
   const Icon = ICONS[slug] ?? Triangle;

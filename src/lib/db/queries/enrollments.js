@@ -1,6 +1,11 @@
 import "server-only";
 import { queryMany, queryOne } from "@/lib/db";
 
+/**
+ * Enrollment milik seorang student dalam bentuk Map
+ * courseId -> { progress, status, lastContentId }.
+ * Dipakai katalog untuk menentukan tombol "Ikuti" atau "Lanjutkan".
+ */
 export async function getEnrollmentMap(studentId) {
   if (!studentId) return new Map();
   const rows = await queryMany(

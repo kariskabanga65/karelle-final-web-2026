@@ -4,10 +4,9 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CategoryCard } from "@/components/course/category-card";
 import { TeacherCard } from "@/components/course/teacher-card";
-import { BenefitStrip } from "@/components/home/benefit-strip";
 import { HeroCarousel } from "@/components/home/hero-carousel";
+import { BenefitStrip } from "@/components/home/benefit-strip";
 import { PopularCourseList } from "@/components/home/popular-course-list";
-import { Ribbon } from "@/components/layout/ribbon";
 import { CourseFilters } from "@/components/shared/course-filters";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -20,11 +19,10 @@ export const metadata = {
 };
 
 const GALLERY = [
-  { src: "/images/hero-model.jpg", alt: "Model berpose duduk dengan busana hitam", className: "col-span-2 row-span-2", position: "object-[center_70%]" },
-  { src: "/images/categories/runway-catwalk.jpg", alt: "Model berjalan di runway" },
-  { src: "/images/categories/photoshoot-posing.jpg", alt: "Potret model saat photoshoot" },
-  { src: "/images/categories/model-portfolio.jpg", alt: "Foto polaroid untuk portofolio model" },
-  { src: "/images/categories/casting-preparation.jpg", alt: "Kursi sutradara bertuliskan casting" },
+  { src: "/images/gallery/runway-rehearsal.jpg", alt: "Para model berlatih catwalk berbaris di studio", position: "object-center" },
+  { src: "/images/gallery/on-set-clapper.jpg", alt: "Model di depan kamera dengan clapperboard saat syuting", position: "object-[center_35%]" },
+  { src: "/images/gallery/studio-photoshoot.jpg", alt: "Fotografer memotret model di studio dengan softbox", position: "object-[center_60%]" },
+  { src: "/images/gallery/beauty-lighting.jpg", alt: "Model duduk di bawah lampu lantern saat sesi beauty shot", position: "object-[center_62%]" },
 ];
 
 export default async function HomePage() {
@@ -89,7 +87,6 @@ export default async function HomePage() {
         <div className="absolute inset-y-0 left-0 w-full lg:w-3/5 lg:[mask-image:linear-gradient(to_right,black_45%,transparent)]">
           <Image src="/images/editorial-face.jpg" alt="" fill sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover object-[72%_40%] opacity-30 lg:opacity-100" />
         </div>
-        <Ribbon flip className="-top-16 right-0 w-[380px] opacity-50" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:py-28">
           <div className="hidden lg:block" />
           <div className="space-y-7">
@@ -142,10 +139,11 @@ export default async function HomePage() {
               Behind the <em className="italic">lens</em>
             </h2>
           </div>
-          <div className="grid auto-rows-[220px] grid-cols-2 gap-3 md:grid-cols-4">
+          {/* 4 foto portrait; kolom ke-2 & ke-4 diturunkan sedikit agar terasa editorial */}
+          <div className="grid grid-cols-2 items-start gap-3 sm:gap-4 md:grid-cols-4 md:pb-12">
             {GALLERY.map((photo) => (
-              <figure key={photo.src} className={`relative overflow-hidden rounded-xl bg-ink ${photo.className ?? ""}`}>
-                <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 768px) 25vw, 50vw" className={`object-cover grayscale transition-transform duration-700 hover:scale-105 ${photo.position ?? "object-top"}`} />
+              <figure key={photo.src} className="relative aspect-[3/4] overflow-hidden rounded-xl bg-ink md:even:mt-12">
+                <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 768px) 25vw, 50vw" className={`object-cover grayscale transition-transform duration-700 hover:scale-105 ${photo.position}`} />
               </figure>
             ))}
           </div>
@@ -154,7 +152,6 @@ export default async function HomePage() {
 
       {/* CALL TO ACTION */}
       <section aria-labelledby="cta-title" className="relative overflow-hidden bg-ink text-white">
-        <Ribbon className="-bottom-36 -left-28 w-[420px] opacity-35" />
         <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-7 px-5 py-24 text-center sm:px-8">
           <p className="eyebrow text-white/80">Start Today</p>
           <h2 id="cta-title" className="display-title text-5xl sm:text-6xl">

@@ -40,6 +40,37 @@ database/
 └── seed.sql
 ```
 
+## Desain
+
+- Gaya editorial monokrom: hitam pekat, putih gading, aksen silver.
+- Font **Bodoni Moda** (judul) dan **Jost** (teks), dipasang lewat npm (`@fontsource-variable/*`) sehingga tidak bergantung pada Google Fonts.
+- Komponen dasar **shadcn/ui** ada di `src/components/ui`. Komponen baru bisa ditambah dengan `npx shadcn@latest add <nama>`.
+- Token warna ada di `src/app/globals.css`.
+
+### Foto
+
+Foto ada di folder `public/images/` dan ditampilkan dalam hitam-putih sesuai tema. Untuk mengganti foto, timpa file dengan **nama yang sama**:
+
+| File | Dipakai di |
+|---|---|
+| `hero-model.jpg` | Hero homepage, halaman login, galeri |
+| `editorial-face.jpg` | Section "Why Choose KARÉLLE" |
+| `categories/runway-catwalk.jpg` | Kartu & course kategori Runway & Catwalk |
+| `categories/photoshoot-posing.jpg` | Kategori Photoshoot & Posing |
+| `categories/model-portfolio.jpg` | Kategori Model Portfolio |
+| `categories/casting-preparation.jpg` | Kategori Casting Preparation |
+
+### Sumber gambar
+
+Gambar dipakai untuk keperluan tugas kuliah (non-komersial). Hak cipta tetap milik pembuatnya.
+
+| File | Sumber |
+|---|---|
+| `categories/model-portfolio.jpg` | Character reference sheet karya **@smarts.ai** |
+| `gallery/*.jpg` (4 foto Gallery) | Pinterest — *(isi nama/akun pembuat foto di sini)*; dijadikan hitam-putih |
+| `instructors/*.jpg` (foto instruktur) | Foto dari pemilik proyek / Pinterest — *(isi sumber di sini)*; dijadikan hitam-putih |
+| Foto lainnya | *(isi sumber/pembuat foto di sini)* |
+
 ## Persyaratan
 
 - Node.js 20.9 atau lebih baru

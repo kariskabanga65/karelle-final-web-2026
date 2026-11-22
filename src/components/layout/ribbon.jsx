@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 
+/** Ornamen pita silver (dekoratif, disembunyikan dari pembaca layar). */
 export function Ribbon({ className, flip = false }) {
   return (
     <svg

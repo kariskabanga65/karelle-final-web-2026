@@ -2,19 +2,24 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDashboardPath, ROLE_LABELS } from "@/lib/auth/roles";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils/cn";
+import { HeaderFrame } from "./header-frame";
 import { Logo } from "./logo";
 import { MainNav } from "./main-nav";
 import { MobileNav } from "./mobile-nav";
 import { UserMenu } from "./user-menu";
 
-export async function SiteHeader({ overlay = false }) {
+/**
+ * Navbar publik. Server Component: membaca session langsung di server,
+ * sehingga tombol Login/Register atau menu akun tampil sesuai status login.
+ */
+export async function SiteHeader() {
   const user = await getCurrentUser();
   const dashboardPath = user ? getDashboardPath(user.role) : "/login";
-  const safeUser = user ? { name: user.name, email: user.email } : null;
+  // Hanya kirim data yang dibutuhkan ke komponen client.
+  const safeUser = user ? { name: user.name, email: user.email, image: user.image ?? null } : null;
 
   return (
-    <header className={cn("z-40 w-full text-white", overlay ? "absolute inset-x-0 top-0" : "sticky top-0 bg-ink")}>
+    <HeaderFrame>
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 sm:px-8">
         <Logo />
         <MainNav />
@@ -34,6 +39,6 @@ export async function SiteHeader({ overlay = false }) {
           <MobileNav user={safeUser} dashboardPath={dashboardPath} />
         </div>
       </div>
-    </header>
+    </HeaderFrame>
   );
 }

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { formatPercent, getCategoryImage } from "@/lib/utils/format";
 
+/** 5 course terpopuler dalam format daftar bernomor ala majalah. */
 export function PopularCourseList({ courses, enrollments }) {
   return (
     <ol className="divide-y border-y">

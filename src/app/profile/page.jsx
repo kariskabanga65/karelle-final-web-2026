@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth/session";
 import { getDashboardPath, ROLE_LABELS } from "@/lib/auth/roles";
 import { getLatestTeacherApplication } from "@/lib/db/queries/teacher-applications";
 import { LogoutButton } from "@/components/shared/logout-button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/utils/format";
 
 export const metadata = { title: "Profil | KARÉLLE" };
 
@@ -22,16 +24,22 @@ export default async function ProfilePage() {
   const showWelcomeTeacher = user.role === "teacher" && application?.is_newly_approved;
 
   return (
-    <main className="min-h-screen bg-[#f7f1e8] px-4 py-12">
+    <main className="min-h-screen bg-background px-4 py-12">
       <div className="mx-auto max-w-2xl space-y-6 rounded-xl bg-white p-8 shadow-sm">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-semibold">Profil Saya</h1>
+          <div className="flex items-center gap-4">
+            <Avatar className="size-16">
+              {user.image && <AvatarImage src={user.image} alt={`Foto ${user.name}`} className="grayscale" />}
+              <AvatarFallback className="bg-ink font-display text-xl text-white">{getInitials(user.name)}</AvatarFallback>
+            </Avatar>
+            <h1 className="text-2xl font-semibold">Profil Saya</h1>
+          </div>
           <LogoutButton />
         </div>
 
         {showWelcomeTeacher && (
-          <div role="status" className="rounded-md border border-[#b08d57] bg-[#fbf6ec] px-4 py-3 text-sm">
-            <p className="font-semibold text-[#7a1f3d]">Selamat datang, Teacher! 🎉</p>
+          <div role="status" className="rounded-md border border-silver bg-card px-4 py-3 text-sm">
+            <p className="font-semibold text-foreground underline-offset-4">Selamat datang, Teacher! 🎉</p>
             <p>Pengajuan Anda telah disetujui Admin. Sekarang Anda dapat membuat course.</p>
           </div>
         )}
@@ -50,19 +58,19 @@ export default async function ProfilePage() {
         )}
 
         <dl className="grid grid-cols-[140px_1fr] gap-y-2 text-sm">
-          <dt className="text-neutral-500">Nama</dt>
+          <dt className="text-muted-foreground">Nama</dt>
           <dd>{user.name}</dd>
-          <dt className="text-neutral-500">Username</dt>
+          <dt className="text-muted-foreground">Username</dt>
           <dd>{user.username}</dd>
-          <dt className="text-neutral-500">Email</dt>
+          <dt className="text-muted-foreground">Email</dt>
           <dd>{user.email}</dd>
-          <dt className="text-neutral-500">Role</dt>
-          <dd className="font-medium text-[#7a1f3d]">{ROLE_LABELS[user.role]}</dd>
-          <dt className="text-neutral-500">Status akun</dt>
+          <dt className="text-muted-foreground">Role</dt>
+          <dd className="font-medium text-foreground underline-offset-4">{ROLE_LABELS[user.role]}</dd>
+          <dt className="text-muted-foreground">Status akun</dt>
           <dd>{isPending ? "Aktif · Pengajuan Teacher pending" : "Aktif"}</dd>
         </dl>
 
-        <Link href={getDashboardPath(user.role)} className="text-sm font-medium text-[#7a1f3d] hover:underline">
+        <Link href={getDashboardPath(user.role)} className="text-sm font-medium text-foreground underline-offset-4 hover:underline">
           Ke dashboard
         </Link>
       </div>

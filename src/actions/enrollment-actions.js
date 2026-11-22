@@ -8,8 +8,15 @@ import { withTransaction } from "@/lib/db";
 import { getDbErrorMessage } from "@/lib/db/errors";
 import { actionError, actionSuccess } from "@/lib/utils/action-result";
 
+// z.guid(): format UUID umum (8-4-4-4-12) seperti yang diterima PostgreSQL.
 const courseIdSchema = z.guid({ error: "Course tidak valid." });
 
+/**
+ * Student mengikuti sebuah course.
+ * - Wajib login sebagai Student (Guest, Teacher, dan Admin ditolak).
+ * - UNIQUE(student_id, course_id) di database mencegah enroll ganda.
+ * - Teacher pemilik course mendapat notifikasi.
+ */
 export async function enrollCourseAction(courseId) {
   const user = await getCurrentUser();
   if (!user) return actionError("Silakan login sebagai Student untuk mengikuti course.");

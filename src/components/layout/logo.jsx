@@ -2,6 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 
+/**
+ * Logo KARÉLLE: monogram "K" silver (gambar) + wordmark.
+ * variant="full" menampilkan logo lengkap (dipakai di halaman login).
+ */
 export function Logo({ className, variant = "inline" }) {
   if (variant === "full") {
     return (

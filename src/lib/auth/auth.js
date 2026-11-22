@@ -8,6 +8,16 @@ import { ROLES } from "./roles";
 
 const USERNAME_PATTERN = /^[a-z0-9_.]{3,30}$/;
 
+/**
+ * Konfigurasi Better Auth untuk KARÉLLE.
+ *
+ * - Database  : PostgreSQL lewat pool `pg` yang sama dengan aplikasi.
+ * - Tabel     : users, sessions, accounts, verifications (snake_case),
+ *               dipetakan dari nama default Better Auth (camelCase).
+ * - Password  : bcryptjs (bukan scrypt bawaan Better Auth).
+ * - Role      : kolom users.role, TIDAK bisa diisi dari form register
+ *               (input: false), sehingga semua pendaftar menjadi student.
+ */
 export const auth = betterAuth({
   appName: "KARÉLLE — Modeling Course",
   secret: process.env.BETTER_AUTH_SECRET,
@@ -18,13 +28,19 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
     minPasswordLength: 8,
-    maxPasswordLength: 72, 
+    maxPasswordLength: 72, // batas maksimal bcrypt
     password: {
       hash: hashPassword,
       verify: verifyPassword,
     },
-    resetPasswordTokenExpiresIn: 60 * 60, 
+    resetPasswordTokenExpiresIn: 60 * 60, // 1 jam
     revokeSessionsOnPasswordReset: true,
+    /**
+     * Proyek ini belum memakai layanan email. Tautan reset password
+     * ditampilkan di terminal server (npm run dev) agar fitur tetap
+     * bisa diuji. Ganti bagian ini dengan pengirim email sungguhan
+     * (misalnya Resend atau Nodemailer) saat aplikasi di-deploy.
+     */
     sendResetPassword: async ({ user, url }) => {
       console.info(`\n[auth] Tautan reset password untuk ${user.email}:\n${url}\n`);
     },
@@ -43,7 +59,7 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         defaultValue: ROLES.STUDENT,
-        input: false, 
+        input: false, // tidak bisa dikirim dari form register
       },
       headline: { type: "string", required: false, input: false },
       bio: { type: "string", required: false, input: false },
@@ -60,8 +76,8 @@ export const auth = betterAuth({
       createdAt: "created_at",
       updatedAt: "updated_at",
     },
-    expiresIn: 60 * 60 * 24 * 7, 
-    updateAge: 60 * 60 * 24, 
+    expiresIn: 60 * 60 * 24 * 7, // 7 hari
+    updateAge: 60 * 60 * 24, // perpanjang sesi setiap 1 hari
   },
 
   account: {
@@ -92,6 +108,8 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // Lapisan pengaman tambahan untuk request yang langsung ke
+        // /api/auth/sign-up/email tanpa melewati form aplikasi.
         before: async (user) => {
           const username = String(user.username ?? "").trim().toLowerCase();
           if (!USERNAME_PATTERN.test(username)) {
@@ -106,5 +124,7 @@ export const auth = betterAuth({
     },
   },
 
+  // Wajib diletakkan paling akhir: menyimpan cookie session saat
+  // auth.api dipanggil dari Server Action.
   plugins: [nextCookies()],
 });

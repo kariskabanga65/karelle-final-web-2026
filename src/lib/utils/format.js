@@ -1,3 +1,5 @@
+/** Helper format tampilan (tanggal, angka, inisial nama). */
+
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "numeric",
   month: "short",
@@ -10,6 +12,7 @@ export function formatDate(value) {
   return dateFormatter.format(new Date(value));
 }
 
+/** "1 Des 2026 – 28 Feb 2027" atau "Akses selamanya" untuk kelas lifetime. */
 export function formatCoursePeriod(startDate, endDate) {
   if (!startDate && !endDate) return "Akses selamanya";
   if (startDate && endDate) return `${formatDate(startDate)} – ${formatDate(endDate)}`;
@@ -31,6 +34,7 @@ export function getInitials(name = "") {
     .join("");
 }
 
+/** Gambar kategori: public/images/categories/<slug>.jpg */
 export function getCategoryImage(slug) {
   const known = ["runway-catwalk", "photoshoot-posing", "model-portfolio", "casting-preparation"];
   return known.includes(slug) ? `/images/categories/${slug}.jpg` : "/images/hero-model.jpg";

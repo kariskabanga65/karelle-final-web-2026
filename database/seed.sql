@@ -40,6 +40,12 @@ INSERT INTO users (id, name, username, email, email_verified, role, headline, bi
   ('usr_aisyah', 'Nur Aisyah', 'nur.aisyah', 'aisyah@karelle.id', TRUE, 'student', NULL, NULL, NOW() - INTERVAL '15 days', NOW() - INTERVAL '15 days')
 ON CONFLICT DO NOTHING;
 
+-- Foto profil instruktur (file ada di public/images/instructors/).
+-- Memakai UPDATE agar tetap terisi walaupun user sudah ada di database.
+UPDATE users SET image = '/images/instructors/karis-kabanga.jpg' WHERE id = 'usr_karis';
+UPDATE users SET image = '/images/instructors/kesia-karamoy.jpg' WHERE id = 'usr_kesia';
+UPDATE users SET image = '/images/instructors/ivan-gunawan.jpg'  WHERE id = 'usr_ivan';
+
 -- -------------------------------------------------------------
 -- 2. Accounts (password hash bcrypt, provider 'credential')
 --    Better Auth: account_id = id user, provider_id = 'credential'

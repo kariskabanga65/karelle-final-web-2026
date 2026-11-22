@@ -1,3 +1,4 @@
+/** Menu navigasi publik (dipakai navbar desktop, mobile, dan footer). */
 export const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/courses", label: "Courses" },
