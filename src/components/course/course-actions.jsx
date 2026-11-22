@@ -71,7 +71,7 @@ export function CourseActions({ course, viewer, enrollment, layout = "card" }) {
   } else {
     primary = (
       <Button asChild size={size}>
-        <Link href="/admin">
+        <Link href={`/admin/courses/${course.id}/edit`}>
           <Settings2 /> Kelola di panel Admin
         </Link>
       </Button>

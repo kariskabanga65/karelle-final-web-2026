@@ -1,0 +1,140 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { authorizeAction } from "@/lib/auth/action-guard";
+import { ROLES } from "@/lib/auth/roles";
+import { query, queryOne } from "@/lib/db";
+import { getDbErrorMessage } from "@/lib/db/errors";
+import { actionError, actionSuccess, formDataToObject, validationError } from "@/lib/utils/action-result";
+import { isUuid, slugify } from "@/lib/utils/slug";
+import { courseSchema } from "@/lib/validations/course";
+
+/**
+ * Course Management untuk Admin DAN Teacher.
+ * - Admin   : mengelola semua course dan memilih Teacher-nya.
+ * - Teacher : teacher_id otomatis akun yang login; hanya bisa mengubah
+ *             dan menghapus course miliknya (dicek di query SQL).
+ */
+
+export async function createCourseAction(_prevState, formData) {
+  const { user, error } = await authorizeAction([ROLES.TEACHER]); // Admin otomatis lolos
+  if (error) return error;
+
+  const input = formDataToObject(formData);
+  const parsed = courseSchema.safeParse(input);
+  if (!parsed.success) return validationError(parsed.error, input);
+
+  const teacher = await resolveTeacher(user, parsed.data.teacherId, input);
+  if (teacher.error) return teacher.error;
+
+  const { title, description, categoryId, startDate, endDate } = parsed.data;
+  try {
+    await query(
+      `INSERT INTO courses (title, slug, description, category_id, teacher_id, start_date, end_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [title, await uniqueSlug(title), description, categoryId, teacher.id, startDate, endDate],
+    );
+  } catch (err) {
+    return actionError(getDbErrorMessage(err, "Gagal membuat course."), {}, input);
+  }
+
+  revalidateCourses();
+  redirect(`${basePath(user)}/courses?success=created`);
+}
+
+export async function updateCourseAction(courseId, _prevState, formData) {
+  const { user, error } = await authorizeAction([ROLES.TEACHER]);
+  if (error) return error;
+  if (!isUuid(courseId)) return actionError("Course tidak valid.");
+
+  const input = formDataToObject(formData);
+  const parsed = courseSchema.safeParse(input);
+  if (!parsed.success) return validationError(parsed.error, input);
+
+  const course = await queryOne(`SELECT id, title, slug, teacher_id FROM courses WHERE id = $1`, [courseId]);
+  if (!course || !canManage(user, course)) {
+    return actionError("Course tidak ditemukan atau bukan milik Anda.", {}, input);
+  }
+
+  const teacher = await resolveTeacher(user, parsed.data.teacherId || course.teacher_id, input);
+  if (teacher.error) return teacher.error;
+
+  const { title, description, categoryId, startDate, endDate } = parsed.data;
+  const slug = title === course.title ? course.slug : await uniqueSlug(title, courseId);
+
+  try {
+    await query(
+      `UPDATE courses
+          SET title = $1, slug = $2, description = $3, category_id = $4,
+              teacher_id = $5, start_date = $6, end_date = $7
+        WHERE id = $8 AND ($9::text IS NULL OR teacher_id = $9)`,
+      [title, slug, description, categoryId, teacher.id, startDate, endDate, courseId, ownerFilter(user)],
+    );
+  } catch (err) {
+    return actionError(getDbErrorMessage(err, "Gagal menyimpan course."), {}, input);
+  }
+
+  revalidateCourses();
+  redirect(`${basePath(user)}/courses?success=updated`);
+}
+
+export async function deleteCourseAction(courseId) {
+  const { user, error } = await authorizeAction([ROLES.TEACHER]);
+  if (error) return error;
+  if (!isUuid(courseId)) return actionError("Course tidak valid.");
+
+  try {
+    // Teacher hanya bisa menghapus course miliknya sendiri.
+    const result = await query(
+      `DELETE FROM courses
+        WHERE id = $1 AND ($2::text IS NULL OR teacher_id = $2)
+        RETURNING title`,
+      [courseId, ownerFilter(user)],
+    );
+    if (result.rowCount === 0) return actionError("Course tidak ditemukan atau bukan milik Anda.");
+    revalidateCourses();
+    return actionSuccess(`Course "${result.rows[0].title}" dihapus.`);
+  } catch (err) {
+    return actionError(getDbErrorMessage(err, "Gagal menghapus course."));
+  }
+}
+
+// ---------------------------------------------------------------
+const isAdmin = (user) => user.role === ROLES.ADMIN;
+const basePath = (user) => (isAdmin(user) ? "/admin" : "/teacher");
+const ownerFilter = (user) => (isAdmin(user) ? null : user.id);
+const canManage = (user, course) => isAdmin(user) || course.teacher_id === user.id;
+
+/** Admin memilih Teacher dari form; Teacher selalu dirinya sendiri. */
+async function resolveTeacher(user, requestedTeacherId, input) {
+  if (!isAdmin(user)) return { id: user.id };
+  const teacher = requestedTeacherId
+    ? await queryOne(`SELECT id FROM users WHERE id = $1 AND role = 'teacher'`, [requestedTeacherId])
+    : null;
+  if (!teacher) {
+    return { error: actionError("Periksa kembali data yang Anda isi.", { teacherId: ["Pilih Teacher yang valid."] }, input) };
+  }
+  return { id: teacher.id };
+}
+
+/** Slug unik: "judul", lalu "judul-2", "judul-3", dst. */
+async function uniqueSlug(title, excludeId = null) {
+  const base = slugify(title);
+  let slug = base;
+  for (let n = 2; ; n += 1) {
+    const taken = await queryOne(
+      `SELECT 1 FROM courses WHERE slug = $1 AND id IS DISTINCT FROM $2`,
+      [slug, excludeId],
+    );
+    if (!taken) return slug;
+    slug = `${base}-${n}`;
+  }
+}
+
+function revalidateCourses() {
+  revalidatePath("/admin/courses");
+  revalidatePath("/teacher/courses");
+  revalidatePath("/courses");
+  revalidatePath("/");
+}
