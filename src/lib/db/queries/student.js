@@ -1,6 +1,7 @@
 import "server-only";
 import { queryMany, queryOne } from "@/lib/db";
 
+/** Statistik dashboard Student. */
 export async function getStudentStats(studentId) {
   return queryOne(
     `SELECT COUNT(*)::int AS total_courses,
@@ -17,7 +18,10 @@ export async function getStudentStats(studentId) {
   );
 }
 
-
+/**
+ * Semua kelas yang diikuti Student, beserta materi berikutnya.
+ * status: '' (semua) | 'active' | 'completed'.
+ */
 export async function listStudentCourses(studentId, status = "") {
   const statusFilter = ["active", "completed"].includes(status) ? status : null;
   return queryMany(
@@ -48,7 +52,7 @@ export async function listStudentCourses(studentId, status = "") {
   );
 }
 
-
+/** Rekomendasi: course yang belum diikuti, paling populer dulu. */
 export async function getRecommendedCourses(studentId, limit = 3) {
   return queryMany(
     `SELECT v.*

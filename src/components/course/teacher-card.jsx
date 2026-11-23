@@ -2,9 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { getInitials } from "@/lib/utils/format";
 
+/** Kartu profil instruktur: foto di atas, lalu nama, bio, dan statistik. */
 export function TeacherCard({ teacher, showCourses = false }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-xs">
+      {/* Foto profil (hitam-putih); jika belum ada foto, tampilkan inisial */}
       <div className="relative aspect-[4/3] overflow-hidden bg-ink">
         {teacher.image ? (
           <Image

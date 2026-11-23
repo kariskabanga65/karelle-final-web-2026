@@ -6,7 +6,13 @@ import { getEnrollment } from "@/lib/db/queries/enrollments";
 import { getLearningCourse } from "@/lib/db/queries/learning";
 import { isUuid } from "@/lib/utils/slug";
 
-
+/**
+ * Hak akses ruang belajar untuk satu course.
+ * - Student: wajib mengikuti course; jika belum -> diarahkan ke halaman detail course.
+ * - Admin  : mode pratinjau (boleh membaca, tidak bisa menandai selesai).
+ * cache() -> dihitung sekali per request walau dipanggil di layout & page
+ * (argumen berupa nilai primitif agar cache cocok).
+ */
 export const getLearnerContext = cache(async (userId, role, courseId) => {
   if (!isUuid(courseId)) notFound();
   const course = await getLearningCourse(courseId);

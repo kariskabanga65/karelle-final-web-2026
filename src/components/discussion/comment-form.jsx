@@ -7,6 +7,7 @@ import { createCommentAction } from "@/actions/comment-actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
+/** Form komentar / balasan diskusi. */
 export function CommentForm({ contentId, parentId = null, placeholder, compact = false, onDone, autoFocus = false }) {
   const [state, formAction, pending] = useActionState(createCommentAction.bind(null, contentId, parentId), null);
   const formRef = useRef(null);

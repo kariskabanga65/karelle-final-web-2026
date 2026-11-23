@@ -11,6 +11,7 @@ import { isUuid } from "@/lib/utils/slug";
 
 export const metadata = { title: "Diskusi Materi | Teacher KARÉLLE" };
 
+/** Teacher pemilik course (dan Admin) membaca & membalas diskusi satu materi. */
 export default async function LessonDiscussionPage({ params }) {
   const user = await requireRole(ROLES.TEACHER);
   const { id, contentId } = await params;

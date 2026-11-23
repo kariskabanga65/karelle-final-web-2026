@@ -27,7 +27,6 @@ export default async function StudentDashboardPage({ searchParams }) {
     listNotifications(user.id, { limit: 5 }),
     getRecommendedCourses(user.id, 3),
   ]);
-  
   const current = courses.find((course) => course.status === "active" && course.total_lessons > 0 && !course.not_started);
   const viewer = { id: user.id, role: user.role };
 

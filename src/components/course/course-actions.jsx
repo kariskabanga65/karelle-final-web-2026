@@ -6,6 +6,14 @@ import { ROLES } from "@/lib/auth/roles";
 import { formatPercent } from "@/lib/utils/format";
 import { EnrollButton } from "./enroll-button";
 
+/**
+ * Tombol dinamis di kartu/detail course, sesuai siapa yang melihat:
+ * - Guest                    : Login / Daftar
+ * - Student belum ikut       : Ikuti Course
+ * - Student sudah ikut       : progress + Lanjutkan Belajar
+ * - Teacher pemilik course   : Kelola Course
+ * - Admin                    : Kelola di panel Admin
+ */
 export function CourseActions({ course, viewer, enrollment, layout = "card" }) {
   const isDetail = layout === "detail";
   const size = isDetail ? "lg" : "default";

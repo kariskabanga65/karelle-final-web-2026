@@ -10,7 +10,7 @@ import { getLearnerContext } from "@/lib/learning/access";
 
 export const metadata = { title: "Belajar | KARÉLLE" };
 
-/** Tombol "Lanjutkan" mengarah ke sini, lalu diteruskan ke materi yang tepat. */
+
 export default async function LearnCoursePage({ params }) {
   const user = await requireRole(ROLES.STUDENT);
   const { courseId } = await params;

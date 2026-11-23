@@ -6,11 +6,13 @@ import { query } from "@/lib/db";
 import { actionError, actionSuccess } from "@/lib/utils/action-result";
 import { isUuid } from "@/lib/utils/slug";
 
-
+/** Menandai satu notifikasi milik user sebagai sudah dibaca. */
 export async function markNotificationReadAction(notificationId) {
   const { user, error } = await authorizeAction();
   if (error) return error;
   if (!isUuid(notificationId)) return actionError("Notifikasi tidak ditemukan.");
+
+  // WHERE user_id: notifikasi user lain tidak bisa diubah.
   await query(`UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2`, [notificationId, user.id]);
   revalidatePath("/", "layout");
   return actionSuccess("Notifikasi ditandai sudah dibaca.");

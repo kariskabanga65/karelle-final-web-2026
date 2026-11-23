@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { CheckCircle2, Circle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-
+/** Daftar materi di ruang belajar. Materi yang sedang dibuka ditandai. */
 export function LessonOutline({ courseId, lessons, locked = false, onNavigate }) {
   const { contentId } = useParams();
 

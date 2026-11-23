@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { updateProfileAction } from "@/actions/profile-actions";
 import { FormField, FormMessage, SubmitButton } from "./form-field";
 
-
+/** Edit nama, headline, dan bio milik sendiri. */
 export function ProfileForm({ user }) {
   const [state, formAction, pending] = useActionState(updateProfileAction, null);
   const errors = state?.fieldErrors ?? {};

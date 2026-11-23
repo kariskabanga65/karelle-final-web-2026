@@ -9,6 +9,13 @@ import { actionError, actionSuccess, formDataToObject, validationError } from "@
 import { isUuid } from "@/lib/utils/slug";
 import { commentSchema } from "@/lib/validations/comment";
 
+/**
+ * Diskusi per materi.
+ * Yang boleh membaca & menulis: Student yang mengikuti course,
+ * Teacher pemilik course, dan Admin. Komentar disimpan sebagai teks
+ * biasa dan ditampilkan apa adanya oleh React (otomatis di-escape),
+ * jadi aman dari XSS.
+ */
 
 export async function createCommentAction(contentId, parentId, _prevState, formData) {
   const { user, error } = await authorizeAction();
@@ -27,6 +34,8 @@ export async function createCommentAction(contentId, parentId, _prevState, formD
       let parentAuthor = null;
       if (parentId) {
         if (!isUuid(parentId)) throw new UserError("Komentar yang dibalas tidak ditemukan.");
+        // Balasan harus berada di materi yang sama. Balasan untuk balasan
+        // ditempelkan ke komentar utama (diskusi hanya 1 tingkat).
         const { rows } = await client.query(
           `SELECT id, parent_id, user_id FROM comments WHERE id = $1 AND content_id = $2`,
           [parentId, access.content_id],
@@ -40,6 +49,8 @@ export async function createCommentAction(contentId, parentId, _prevState, formD
         `INSERT INTO comments (content_id, user_id, parent_id, body) VALUES ($1, $2, $3, $4)`,
         [access.content_id, user.id, rootId, parsed.data.body],
       );
+
+      // Notifikasi: penulis komentar yang dibalas, dan Teacher untuk pertanyaan baru.
       const recipients = new Set();
       if (parentAuthor && parentAuthor !== user.id) recipients.add(parentAuthor);
       if (!parentId && access.teacher_id !== user.id) recipients.add(access.teacher_id);
@@ -67,6 +78,7 @@ export async function createCommentAction(contentId, parentId, _prevState, formD
   return actionSuccess(parentId ? "Balasan terkirim." : "Komentar terkirim.", { sentAt: Date.now() });
 }
 
+/** Penulis boleh menghapus komentarnya; Teacher pemilik course & Admin boleh memoderasi. */
 export async function deleteCommentAction(commentId) {
   const { user, error } = await authorizeAction();
   if (error) return error;
@@ -85,6 +97,7 @@ export async function deleteCommentAction(commentId) {
   if (!allowed) return actionError("Anda tidak dapat menghapus komentar ini.");
 
   try {
+    // Balasan ikut terhapus (ON DELETE CASCADE).
     await queryOne(`DELETE FROM comments WHERE id = $1 RETURNING id`, [comment.id]);
   } catch (err) {
     return actionError(getDbErrorMessage(err, "Gagal menghapus komentar."));
@@ -93,10 +106,14 @@ export async function deleteCommentAction(commentId) {
   return actionSuccess("Komentar dihapus.");
 }
 
+// ---------------------------------------------------------------
 
 class UserError extends Error {}
 
-
+/**
+ * Info materi jika user boleh ikut diskusi, atau null.
+ * Student: wajib punya enrollment di course tersebut.
+ */
 async function getDiscussionAccess(user, contentId) {
   if (!isUuid(contentId)) return null;
   return queryOne(

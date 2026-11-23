@@ -1,6 +1,10 @@
 import "server-only";
 import { queryMany } from "@/lib/db";
 
+/**
+ * Diskusi satu materi, disusun menjadi thread:
+ * komentar utama (parent_id NULL) beserta balasannya.
+ */
 export async function getDiscussion(contentId) {
   const rows = await queryMany(
     `SELECT cm.id, cm.parent_id, cm.body, cm.created_at, cm.user_id,
@@ -27,5 +31,6 @@ export async function getDiscussion(contentId) {
   for (const row of rows) {
     if (row.parent_id) byId.get(row.parent_id)?.replies.push(row);
   }
+  // Thread terbaru di atas, balasan tetap urut waktu.
   return { threads: threads.reverse(), total: rows.length };
 }

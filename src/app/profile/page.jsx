@@ -16,7 +16,13 @@ import { formatDate, formatPercent, getInitials } from "@/lib/utils/format";
 
 export const metadata = { title: "Profil | KARÉLLE" };
 
-
+/**
+ * Profil pengguna: info akun, kelas yang diikuti (Student) atau diajar (Teacher),
+ * edit profil, dan ganti password.
+ *
+ * Notifikasi Welcome Teacher dihitung di Server Component ini:
+ * muncul hanya jika approved_at kurang dari 24 jam yang lalu.
+ */
 export default async function ProfilePage() {
   const user = await requireUser();
   const [application, enrolled, teaching] = await Promise.all([

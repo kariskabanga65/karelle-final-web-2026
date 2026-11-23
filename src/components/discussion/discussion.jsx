@@ -9,6 +9,10 @@ import { formatRelative, getInitials } from "@/lib/utils/format";
 import { CommentForm } from "./comment-form";
 import { ReplyToggle } from "./reply-toggle";
 
+/**
+ * Diskusi satu materi (Server Component).
+ * Isi komentar ditampilkan sebagai teks biasa -> otomatis di-escape oleh React.
+ */
 export async function Discussion({ contentId, viewer, courseTeacherId }) {
   const { threads, total } = await getDiscussion(contentId);
   const canModerate = viewer.role === ROLES.ADMIN || viewer.id === courseTeacherId;

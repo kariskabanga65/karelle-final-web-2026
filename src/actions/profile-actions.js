@@ -10,6 +10,11 @@ import { getDbErrorMessage } from "@/lib/db/errors";
 import { actionError, actionSuccess, formDataToObject, validationError } from "@/lib/utils/action-result";
 import { changePasswordSchema, profileSchema } from "@/lib/validations/profile";
 
+/**
+ * Mengubah profil sendiri. ID diambil dari session, bukan dari form,
+ * sehingga user tidak bisa mengubah profil orang lain.
+ * Email, username, dan role tidak dapat diubah dari sini.
+ */
 export async function updateProfileAction(_prevState, formData) {
   const { user, error } = await authorizeAction();
   if (error) return error;
@@ -31,7 +36,10 @@ export async function updateProfileAction(_prevState, formData) {
   return actionSuccess("Profil berhasil diperbarui.", { values: parsed.data });
 }
 
-
+/**
+ * Ganti password lewat Better Auth (password lama diverifikasi dengan bcrypt).
+ * Session lain di perangkat berbeda ikut dicabut.
+ */
 export async function changePasswordAction(_prevState, formData) {
   const { error } = await authorizeAction();
   if (error) return error;

@@ -7,6 +7,7 @@ import { FormMessage, SubmitButton } from "./form-field";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "./password-input";
 
+/** Ganti password (password lama wajib diisi). */
 export function ChangePasswordForm() {
   const [state, formAction, pending] = useActionState(changePasswordAction, null);
   const formRef = useRef(null);

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { LessonOutline } from "./lesson-outline";
 
-
+/** Daftar materi versi mobile (panel geser). */
 export function MobileOutline({ courseId, courseTitle, lessons, locked, progressLabel }) {
   const [open, setOpen] = useState(false);
   return (

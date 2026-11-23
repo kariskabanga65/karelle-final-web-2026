@@ -1,7 +1,13 @@
 import "server-only";
 import { query, queryMany, queryOne } from "@/lib/db";
 
+/**
+ * Query untuk ruang belajar Student.
+ * Semua akses materi selalu dicek lewat enrollment milik student,
+ * sehingga student tidak bisa membaca materi course yang tidak diikutinya.
+ */
 
+/** Data course + status periode (belum mulai / sudah berakhir) menurut tanggal database. */
 export async function getLearningCourse(courseId) {
   return queryOne(
     `SELECT c.id, c.title, c.slug, c.start_date, c.end_date, c.teacher_id,
@@ -15,7 +21,7 @@ export async function getLearningCourse(courseId) {
   );
 }
 
-
+/** Daftar materi untuk sidebar, dengan tanda selesai jika ada enrollment. */
 export async function getLessonOutline(courseId, enrollmentId = null) {
   return queryMany(
     `SELECT cc.id, cc.title, cc.order_index,
@@ -28,7 +34,7 @@ export async function getLessonOutline(courseId, enrollmentId = null) {
   );
 }
 
-
+/** Satu materi; WHERE course_id memastikan materi memang bagian dari course tersebut. */
 export async function getLesson(courseId, contentId) {
   return queryOne(
     `SELECT id, course_id, title, content, order_index, updated_at
@@ -38,7 +44,7 @@ export async function getLesson(courseId, contentId) {
   );
 }
 
-
+/** Mencatat materi terakhir yang dibuka (untuk tombol "Lanjutkan"). */
 export async function rememberLastLesson(enrollmentId, contentId) {
   await query(
     `UPDATE enrollments SET last_content_id = $2
@@ -47,6 +53,12 @@ export async function rememberLastLesson(enrollmentId, contentId) {
   );
 }
 
+/**
+ * Materi tujuan tombol "Lanjutkan":
+ * 1. materi terakhir dibuka jika belum selesai,
+ * 2. jika sudah selesai -> materi belum selesai berikutnya,
+ * 3. jika semua selesai -> materi terakhir dibuka / materi pertama.
+ */
 export function pickContinueLesson(outline, lastContentId) {
   if (outline.length === 0) return null;
   const last = outline.find((lesson) => lesson.id === lastContentId);

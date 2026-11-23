@@ -13,6 +13,7 @@ export default async function EditLessonPage({ params }) {
   const user = await requireRole(ROLES.TEACHER);
   const { id, contentId } = await params;
   const course = isUuid(id) ? await getManageableCourse(id, user.role === ROLES.ADMIN ? null : user.id) : null;
+  // Materi dicari bersama course_id, jadi materi course lain tidak bisa dibuka.
   const lesson = course && isUuid(contentId) ? await getLessonForEdit(contentId, course.id) : null;
   if (!course || !lesson) notFound();
 

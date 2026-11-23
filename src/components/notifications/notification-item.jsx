@@ -18,6 +18,7 @@ const ICONS = {
   system: BookOpen,
 };
 
+/** Satu notifikasi. Membuka tautannya sekaligus menandai sudah dibaca. */
 export function NotificationItem({ notification, compact = false }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();

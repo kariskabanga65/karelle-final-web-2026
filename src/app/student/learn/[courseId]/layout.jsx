@@ -11,11 +11,6 @@ import { getLessonOutline } from "@/lib/db/queries/learning";
 import { getLearnerContext } from "@/lib/learning/access";
 import { formatDate, formatPercent, getInitials } from "@/lib/utils/format";
 
-/**
- * Kerangka ruang belajar: sidebar gelap berisi info course,
- * progress, dan daftar materi. Halaman di dalamnya tetap
- * memeriksa akses sendiri (layout tidak boleh jadi satu-satunya pengaman).
- */
 export default async function LearnLayout({ children, params }) {
   const user = await requireRole(ROLES.STUDENT);
   const { courseId } = await params;
@@ -63,7 +58,6 @@ export default async function LearnLayout({ children, params }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Bar atas versi mobile */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 bg-ink px-4 text-white lg:hidden">
           <Link href={backHref} className="inline-flex min-w-0 items-center gap-2 text-sm">
             <ArrowLeft className="size-4 shrink-0" /> <span className="truncate">{course.title}</span>
