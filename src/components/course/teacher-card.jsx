@@ -1,13 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Mail } from "lucide-react";
 import { getInitials } from "@/lib/utils/format";
 
-/** Kartu profil instruktur: foto di atas, lalu nama, bio, dan statistik. */
 export function TeacherCard({ teacher, showCourses = false }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-xs">
-      {/* Foto profil (hitam-putih); jika belum ada foto, tampilkan inisial */}
       <div className="relative aspect-[4/3] overflow-hidden bg-ink">
         {teacher.image ? (
           <Image
@@ -49,9 +46,6 @@ export function TeacherCard({ teacher, showCourses = false }) {
             ))}
           </ul>
         )}
-        <a href={`mailto:${teacher.email}`} className="mt-auto inline-flex items-center gap-2 text-sm font-medium underline-offset-4 hover:underline">
-          <Mail className="size-4" /> Hubungi {teacher.name.split(" ")[0]}
-        </a>
       </div>
     </article>
   );

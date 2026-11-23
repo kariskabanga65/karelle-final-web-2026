@@ -1,23 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Mail, Settings2 } from "lucide-react";
+import { ArrowRight, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ROLES } from "@/lib/auth/roles";
 import { formatPercent } from "@/lib/utils/format";
 import { EnrollButton } from "./enroll-button";
 
-
 export function CourseActions({ course, viewer, enrollment, layout = "card" }) {
   const isDetail = layout === "detail";
   const size = isDetail ? "lg" : "default";
-  const contact = (
-    <Button asChild variant="outline" size={size}>
-      <a href={`mailto:${course.teacher_email}?subject=${encodeURIComponent(`Pertanyaan tentang course ${course.title}`)}`}>
-        <Mail /> Hubungi Teacher
-      </a>
-    </Button>
-  );
-
   let primary;
   if (!viewer) {
     primary = (
@@ -73,7 +64,6 @@ export function CourseActions({ course, viewer, enrollment, layout = "card" }) {
   return (
     <div className={isDetail ? "flex flex-col gap-3" : "flex flex-wrap items-end gap-2"}>
       {primary}
-      {contact}
     </div>
   );
 }

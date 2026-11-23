@@ -1,13 +1,9 @@
 import "server-only";
 import { queryMany } from "@/lib/db";
 
-/**
- * Teacher beserta statistiknya. Hanya data publik yang diambil
- * (nama, headline, bio). Email dipakai untuk tombol "Hubungi Teacher".
- */
 export async function getTeachers({ limit = null } = {}) {
   return queryMany(
-    `SELECT u.id, u.name, u.username, u.email, u.headline, u.bio, u.image,
+    `SELECT u.id, u.name, u.username, u.headline, u.bio, u.image,
             COUNT(DISTINCT c.id)::int         AS course_count,
             COUNT(DISTINCT e.student_id)::int AS student_count,
             COALESCE(
