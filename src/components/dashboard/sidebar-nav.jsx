@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Award,
   Bell,
   BookOpen,
   FolderTree,
@@ -21,6 +22,7 @@ const NAV_ITEMS = {
     { href: "/admin/teacher-applications", label: "Pengajuan Teacher", icon: UserCheck, badgeKey: "pendingApplications" },
     { href: "/admin/courses", label: "Courses", icon: BookOpen },
     { href: "/admin/categories", label: "Kategori", icon: FolderTree },
+    { href: "/admin/certificates", label: "Sertifikat", icon: Award },
   ],
   teacher: [
     { href: "/teacher", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -30,6 +32,7 @@ const NAV_ITEMS = {
   student: [
     { href: "/student", label: "Dashboard", icon: LayoutDashboard, exact: true },
     { href: "/student/courses", label: "Kelas Saya", icon: BookOpen },
+    { href: "/student/certificates", label: "Sertifikat", icon: Award },
   ],
 };
 

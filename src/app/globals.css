@@ -3,22 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * KARÉLLE — Design tokens
- * Editorial monokrom: hitam pekat, putih gading, aksen silver.
- * Semua warna dipakai lewat token (bg-primary, text-muted-foreground, dst.)
- * agar konsisten di seluruh halaman.
- */
 :root {
   --radius: 0.75rem;
 
-  --background: #f1efeb;          /* putih gading (latar halaman) */
-  --foreground: #141414;          /* tinta hitam (teks utama) */
+  --background: #f1efeb;          
+  --foreground: #141414;          
   --card: #ffffff;
   --card-foreground: #141414;
   --popover: #ffffff;
   --popover-foreground: #141414;
-  --primary: #141414;             /* tombol utama */
+  --primary: #141414;             
   --primary-foreground: #f7f5f1;
   --secondary: #e6e3dd;
   --secondary-foreground: #141414;
@@ -31,10 +25,10 @@
   --input: #d2cec6;
   --ring: #141414;
 
-  --ink: #0e0e0e;                 /* latar section gelap */
+  --ink: #0e0e0e;                 
   --ink-soft: #1b1b1b;
   --ink-border: #2e2e2e;
-  --silver: #bdb9b2;              /* aksen silver */
+  --silver: #bdb9b2;              
   --success: #2f6b3f;
   --warning: #8a5a00;
 }
@@ -91,7 +85,6 @@
 }
 
 @layer components {
-  /* Label kecil berhuruf kapital renggang: "OUR COURSES ———" */
   .eyebrow {
     @apply flex items-center gap-4 text-[0.7rem] font-medium tracking-[0.45em] uppercase;
   }
@@ -99,12 +92,9 @@
     content: "";
     @apply h-px w-16 bg-current opacity-50;
   }
-  /* Judul besar serif editorial */
   .display-title {
     @apply font-display leading-[0.95] font-normal tracking-tight;
   }
-
-  /* Isi materi HTML (dipakai halaman belajar & preview materi) */
   .prose-karelle {
     @apply space-y-4 leading-relaxed text-foreground;
   }
@@ -150,26 +140,18 @@
   .prose-karelle strong {
     @apply font-semibold;
   }
-  /* Editor Tiptap: sel tabel yang sedang dipilih */
   .prose-karelle .selectedCell {
     @apply bg-silver/40;
   }
 }
 
-/*
- * Gaya halaman login & register.
- * Ditulis di luar @layer agar menang atas kelas utilitas bawaan
- * komponen (misalnya bg-white pada Input dan bg-primary pada Button).
- */
-/* Tombol silver metalik (halaman login & register) */
+
 .btn-silver {
   @apply bg-gradient-to-b from-[#fafafa] via-[#cfcfcf] to-[#9c9c9c] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_8px_24px_rgba(0,0,0,0.35)] hover:from-white hover:via-[#dcdcdc] hover:to-[#aaaaaa];
 }
-/* Teks bergradasi silver */
 .text-silver {
   @apply bg-gradient-to-b from-[#f5f5f5] via-[#c4c4c4] to-[#8a8a8a] bg-clip-text text-transparent;
 }
-/* Kartu kaca gelap: semua input di dalamnya ikut bertema gelap */
 .auth-glass {
   @apply rounded-[2rem] border border-white/20 bg-white/[0.06] text-white shadow-[0_30px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl;
 }
@@ -197,3 +179,30 @@
   @apply border-[#ff9f94]/40 bg-[#ff9f94]/10 text-[#ffc9c2];
 }
 
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #faf8f4 !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #certificate,
+  #certificate * {
+    visibility: visible;
+  }
+  #certificate {
+    position: fixed;
+    inset: 0;
+    width: 297mm;
+    height: 210mm;
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

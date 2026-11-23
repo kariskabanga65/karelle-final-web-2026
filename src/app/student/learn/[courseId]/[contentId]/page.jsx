@@ -17,7 +17,6 @@ export const metadata = { title: "Materi | KARÉLLE" };
 export default async function LessonPage({ params }) {
   const user = await requireRole(ROLES.STUDENT);
   const { courseId, contentId } = await params;
-  // Akses dicek ulang di halaman (tidak hanya di layout).
   const { course, enrollment, preview } = await getLearnerContext(user.id, user.role, courseId);
   if (!isUuid(contentId)) notFound();
 
@@ -47,7 +46,6 @@ export default async function LessonPage({ params }) {
             <p className="max-w-md text-sm text-muted-foreground">Kelas ini dimulai pada {formatDate(course.start_date)}.</p>
           </div>
         ) : (
-          // HTML dibersihkan saat disimpan DAN saat ditampilkan (pertahanan berlapis terhadap XSS).
           <div className="prose-karelle" dangerouslySetInnerHTML={{ __html: sanitizeLessonHtml(lesson.content) }} />
         )}
 
@@ -88,7 +86,10 @@ export default async function LessonPage({ params }) {
           <div className="rounded-xl bg-ink p-6 text-white">
             <p className="eyebrow text-white/70">Course selesai</p>
             <p className="mt-2 font-display text-3xl">Selamat, Anda menyelesaikan {course.title}!</p>
-            <Button asChild variant="light" className="mt-4"><Link href="/student/courses">Lihat Kelas Saya</Link></Button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild variant="light"><Link href="/student/certificates">Lihat sertifikat</Link></Button>
+              <Button asChild variant="outline-light"><Link href="/student/courses">Kelas Saya</Link></Button>
+            </div>
           </div>
         )}
       </article>

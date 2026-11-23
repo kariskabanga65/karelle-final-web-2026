@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Award, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -49,7 +49,11 @@ export function EnrolledCourseCard({ course }) {
                 : "Belum ada materi"}
           </p>
           <div className="flex gap-2">
-            <Button asChild variant="ghost" size="sm"><Link href={`/courses/${course.slug}`}>Detail</Link></Button>
+            {done ? (
+              <Button asChild variant="outline" size="sm"><Link href="/student/certificates"><Award /> Sertifikat</Link></Button>
+            ) : (
+              <Button asChild variant="ghost" size="sm"><Link href={`/courses/${course.slug}`}>Detail</Link></Button>
+            )}
             {course.total_lessons > 0 && (
               <Button asChild size="sm">
                 <Link href={`/student/learn/${course.course_id}`}>
