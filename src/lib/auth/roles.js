@@ -1,13 +1,11 @@
-/**
- * Konstanta role. File ini tidak memakai database sehingga aman
- * di-import dari mana saja (server, client, maupun middleware).
- */
-
 export const ROLES = Object.freeze({
   ADMIN: "admin",
   TEACHER: "teacher",
   STUDENT: "student",
 });
+
+
+export const LEARNER_ROLES = Object.freeze([ROLES.STUDENT, ROLES.TEACHER]);
 
 export const ROLE_LABELS = Object.freeze({
   admin: "Admin",
@@ -15,7 +13,7 @@ export const ROLE_LABELS = Object.freeze({
   student: "Student",
 });
 
-/** Halaman utama setiap role setelah login. */
+
 export function getDashboardPath(role) {
   switch (role) {
     case ROLES.ADMIN:
@@ -27,15 +25,20 @@ export function getDashboardPath(role) {
   }
 }
 
-/** Prefix URL yang wajib login (dipakai middleware). */
-export const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/teacher", "/student", "/profile"];
 
-/**
- * Mencegah open redirect: hanya izinkan path internal seperti "/student",
- * tolak "https://situs-lain.com" atau "//situs-lain.com".
- */
+export const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/teacher", "/student", "/profile", "/notifications"];
+
+
 export function getSafeRedirectPath(value, fallback = "/dashboard") {
-  if (typeof value !== "string") return fallback;
-  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return fallback;
-  return value;
+  if (typeof value !== "string" || value.length > 512) return fallback;
+  if (/[\u0000-\u001F\u007F\s\\]/.test(value)) return fallback;
+  if (!value.startsWith("/") || value.startsWith("//")) return fallback;
+  try {
+    const base = "http://karelle.local";
+    const url = new URL(value, base);
+    if (url.origin !== base) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
 }
