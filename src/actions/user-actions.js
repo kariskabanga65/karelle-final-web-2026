@@ -10,11 +10,6 @@ import { getDbErrorMessage } from "@/lib/db/errors";
 import { actionError, actionSuccess, formDataToObject, validationError } from "@/lib/utils/action-result";
 import { createUserSchema, updateUserSchema } from "@/lib/validations/user";
 
-/**
- * User Management (khusus Admin).
- * Akun dibuat lewat Better Auth (internalAdapter), sehingga password
- * di-hash dengan fungsi bcrypt yang sama seperti saat register.
- */
 
 export async function createUserAction(_prevState, formData) {
   const { error } = await authorizeAction([ROLES.ADMIN]);
@@ -37,9 +32,8 @@ export async function createUserAction(_prevState, formData) {
       userId: user.id,
       providerId: "credential",
       accountId: user.id,
-      password: await ctx.password.hash(password), // bcrypt.hash()
+      password: await ctx.password.hash(password), 
     });
-    // Better Auth selalu membuat akun sebagai student; Admin lalu menetapkan role.
     await query(`UPDATE users SET role = $1 WHERE id = $2`, [role, user.id]);
   } catch (err) {
     console.error("[users] create", err);
@@ -65,6 +59,16 @@ export async function updateUserAction(userId, _prevState, formData) {
   if (userId === admin.id && role !== ROLES.ADMIN) {
     return actionError("Anda tidak dapat menurunkan role akun Anda sendiri.", { role: ["Role akun sendiri harus tetap Admin."] }, input);
   }
+  if (target.role === ROLES.TEACHER && role !== ROLES.TEACHER) {
+    const owned = await queryOne(`SELECT COUNT(*)::int AS total FROM courses WHERE teacher_id = $1`, [userId]);
+    if (owned.total > 0) {
+      return actionError(
+        `Teacher ini masih memiliki ${owned.total} course.`,
+        { role: ["Pindahkan atau hapus course milik teacher ini terlebih dahulu."] },
+        input,
+      );
+    }
+  }
 
   const duplicate = await findDuplicate({ email, username }, userId, input);
   if (duplicate) return duplicate;
@@ -75,8 +79,6 @@ export async function updateUserAction(userId, _prevState, formData) {
         `UPDATE users SET name = $1, username = $2, email = $3, role = $4 WHERE id = $5`,
         [name, username, email, role, userId],
       );
-      // Verifikasi Teacher lewat Edit User: role diubah menjadi teacher
-      // -> pengajuan yang masih pending ikut disetujui.
       if (role === ROLES.TEACHER && target.role !== ROLES.TEACHER) {
         await client.query(
           `UPDATE teacher_applications
@@ -112,7 +114,6 @@ export async function deleteUserAction(userId) {
     revalidatePath("/admin");
     return actionSuccess(`User ${result.rows[0].name} berhasil dihapus.`);
   } catch (err) {
-    // courses.teacher_id ON DELETE RESTRICT
     return actionError(getDbErrorMessage(err, "Gagal menghapus user."));
   }
 }
