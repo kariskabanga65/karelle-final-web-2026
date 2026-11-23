@@ -1,18 +1,12 @@
 import { z } from "zod";
 
-/**
- * Skema validasi form autentikasi.
- * Dipakai di SERVER (Server Action), sehingga data tetap divalidasi
- * walaupun validasi di browser dilewati.
- */
-
 const emailField = z
   .string({ error: "Email wajib diisi." })
   .trim()
   .toLowerCase()
   .pipe(z.email({ error: "Format email tidak valid." }));
 
-const passwordField = z
+export const passwordField = z
   .string({ error: "Password wajib diisi." })
   .min(8, { error: "Password minimal 8 karakter." })
   .max(72, { error: "Password maksimal 72 karakter." })
@@ -33,11 +27,6 @@ const usernameField = z
     error: "Username 3-30 karakter: huruf kecil, angka, titik, atau underscore.",
   });
 
-/**
- * Login memakai email ATAU username.
- * rememberMe: dicentang -> session bertahan 7 hari,
- * tidak dicentang -> session berakhir saat browser ditutup.
- */
 export const loginSchema = z.object({
   identifier: z
     .string({ error: "Email atau username wajib diisi." })
