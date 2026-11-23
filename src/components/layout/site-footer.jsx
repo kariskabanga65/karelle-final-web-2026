@@ -14,6 +14,7 @@ const ACCOUNT_LINKS = [
   { href: "/login", label: "Login" },
   { href: "/register/student", label: "Daftar sebagai Student" },
   { href: "/register/teacher", label: "Daftar sebagai Teacher" },
+  { href: "/certificates/verify", label: "Verifikasi Sertifikat" },
 ];
 
 export function SiteFooter() {
