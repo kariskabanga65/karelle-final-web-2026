@@ -6,7 +6,7 @@ KARÉLLE adalah platform kursus modeling berbasis kelas dengan empat peran: **Ad
 
 Kelas yang tersedia: **Runway Modeling**, **Posing & Photoshoot**, **Model Portfolio**, dan **Casting Preparation**.
 
-> Dokumentasi lengkap (instalasi database, akun dummy, cara menjalankan) akan dilengkapi pada Tahap 10.
+> Dokumentasi lengkap (instalasi database, akun dummy, cara menjalankan).
 
 ## Teknologi
 
@@ -145,7 +145,7 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 
 **Forgot Password:** proyek ini belum memakai layanan email, jadi tautan reset password ditampilkan di **terminal** tempat `npm run dev` berjalan. Salin tautan tersebut ke browser.
 
-## Fitur Teacher (Tahap 6)
+## Fitur Teacher 
 
 | Halaman | Fitur |
 |---|---|
@@ -158,6 +158,26 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 - Progress student dihitung ulang otomatis oleh **trigger PostgreSQL** saat materi ditambah atau dihapus.
 - Student yang mengikuti course mendapat **notifikasi** saat Teacher menambah materi baru.
 - Admin juga dapat mengelola materi semua course lewat tombol **Materi** di `/admin/courses`.
+
+## Fitur Student 
+
+| Halaman | Fitur |
+|---|---|
+| `/student` | Dashboard: kartu **Lanjutkan belajar**, statistik, kelas saya, notifikasi terbaru, rekomendasi course |
+| `/student/courses` | Kelas Saya: semua kelas yang diikuti dengan progress, filter Sedang dipelajari / Selesai |
+| `/student/learn/[courseId]` | Tombol **Lanjutkan**: diarahkan ke materi terakhir dibuka yang belum selesai |
+| `/student/learn/[courseId]/[contentId]` | Ruang belajar: sidebar materi, isi materi, **Tandai selesai** / batalkan, Sebelumnya / Berikutnya, diskusi |
+| `/teacher/courses/[id]/contents/[contentId]/discussion` | Teacher membaca, membalas, dan memoderasi diskusi per materi |
+| `/notifications` | Notifikasi semua role, tandai dibaca satu per satu atau sekaligus |
+| `/profile` | Profil, kelas yang diikuti/diajar, edit profil, ganti password |
+
+- Progress (`progress_percent`) dan status `completed` dihitung **trigger PostgreSQL** dari tabel `lesson_progress`, bukan dikirim dari browser.
+- Student hanya bisa membuka materi course yang diikutinya. Materi course lain, atau course yang belum diikuti, ditolak di server.
+- Course dengan tanggal mulai di masa depan: materi terkunci sampai tanggal mulai. Setelah tanggal berakhir, materi tetap bisa dibaca tetapi progress tidak dapat diubah.
+- Komentar disimpan sebagai teks biasa dan ditampilkan oleh React (otomatis di-escape), sehingga aman dari XSS. Penulis dapat menghapus komentarnya. Teacher pemilik course dan Admin dapat memoderasi.
+- Notifikasi otomatis: Teacher saat ada pertanyaan baru, penulis komentar saat dibalas, Student saat ada materi baru.
+- Ganti password memakai Better Auth (`changePassword`) dan mengeluarkan sesi di perangkat lain.
+- Admin dapat membuka ruang belajar dalam **mode pratinjau** (tanpa tombol Tandai selesai).
 
 ## Menjalankan Aplikasi
 
