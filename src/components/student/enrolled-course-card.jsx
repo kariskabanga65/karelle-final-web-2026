@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatDate, formatPercent, getCategoryImage } from "@/lib/utils/format";
 
-
+/** Kartu kelas yang diikuti student, dengan progress & tombol Lanjutkan. */
 export function EnrolledCourseCard({ course }) {
   const percent = Number(course.progress_percent);
   const done = course.status === "completed";

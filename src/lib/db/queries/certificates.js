@@ -1,6 +1,7 @@
 import "server-only";
 import { queryMany, queryOne } from "@/lib/db";
 
+/** Format nomor sertifikat: KRL-2026-A1B2C3D4E5 */
 export const CERTIFICATE_NUMBER_PATTERN = /^KRL-\d{4}-[0-9A-F]{10}$/;
 
 const COLUMNS = `ct.id, ct.certificate_number, ct.student_name, ct.course_title, ct.teacher_name, ct.issued_at,
@@ -17,6 +18,7 @@ export async function listStudentCertificates(studentId) {
   );
 }
 
+/** Course yang sudah 100% tetapi belum punya sertifikat (kasus khusus). */
 export async function listClaimableCourses(studentId) {
   return queryMany(
     `SELECT c.id, c.title
@@ -29,7 +31,10 @@ export async function listClaimableCourses(studentId) {
   );
 }
 
-
+/**
+ * Sertifikat untuk halaman lihat/unduh.
+ * viewerId diisi -> hanya pemiliknya. viewerId null -> Admin (semua).
+ */
 export async function getCertificateForViewer(id, viewerId) {
   return queryOne(
     `SELECT ${COLUMNS} FROM certificates ct ${JOINS}
@@ -38,7 +43,7 @@ export async function getCertificateForViewer(id, viewerId) {
   );
 }
 
-
+/** Verifikasi publik: hanya data yang tercetak di sertifikat. */
 export async function getCertificateByNumber(number) {
   return queryOne(
     `SELECT ct.certificate_number, ct.student_name, ct.course_title, ct.teacher_name, ct.issued_at
@@ -48,7 +53,7 @@ export async function getCertificateByNumber(number) {
   );
 }
 
-
+/** Daftar semua sertifikat untuk Admin, dengan pencarian & paginasi. */
 export async function listAllCertificates({ search = "", page = 1, perPage = 15 } = {}) {
   const keyword = search.trim().slice(0, 100);
   const pattern = keyword ? `%${keyword.replace(/[\\%_]/g, "\\$&")}%` : null;

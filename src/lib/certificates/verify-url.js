@@ -1,6 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 
+/** URL verifikasi publik, dipakai di QR code sertifikat. */
 export async function getVerifyUrl(certificateNumber) {
   const base = process.env.NEXT_PUBLIC_APP_URL || (await originFromHeaders());
   return `${base.replace(/\/$/, "")}/certificates/verify/${certificateNumber}`;

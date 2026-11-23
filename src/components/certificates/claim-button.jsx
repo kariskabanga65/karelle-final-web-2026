@@ -15,6 +15,7 @@ export function ClaimCertificateButton({ courseId }) {
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
+          // Jika berhasil, Server Action langsung mengarahkan ke halaman sertifikat.
           const result = await claimCertificateAction(courseId);
           if (result?.error) toast.error(result.error);
         })

@@ -4,7 +4,7 @@ import { Check, Copy, Printer } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-
+/** Tombol Cetak / Simpan PDF (dialog cetak browser) dan salin link verifikasi. */
 export function CertificateToolbar({ verifyUrl }) {
   const [copied, setCopied] = useState(false);
 

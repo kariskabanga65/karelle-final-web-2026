@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+/** Form GET: /certificates/verify?number=KRL-... */
 export function VerifyForm({ defaultValue = "", dark = false }) {
   return (
     <form method="get" action="/certificates/verify" role="search" className="flex flex-col gap-3 sm:flex-row">

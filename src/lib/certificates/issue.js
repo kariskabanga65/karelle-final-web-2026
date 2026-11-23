@@ -1,6 +1,16 @@
 import "server-only";
 
-
+/**
+ * Menerbitkan sertifikat untuk satu enrollment (dipanggil di dalam transaksi).
+ *
+ * - Data nama student, judul course, dan nama teacher disalin (snapshot)
+ *   agar sertifikat tetap valid walau data aslinya kelak berubah/dihapus.
+ * - Trigger database menolak penerbitan jika progress belum 100%.
+ * - UNIQUE (student_id, course_id) + ON CONFLICT: satu sertifikat per course,
+ *   aman walau dipanggil dua kali bersamaan.
+ *
+ * Mengembalikan { id, certificate_number, created } atau null jika belum memenuhi syarat.
+ */
 export async function issueCertificate(client, { studentId, courseId }) {
   const { rows } = await client.query(
     `INSERT INTO certificates (student_id, course_id, student_name, course_title, teacher_name)
@@ -16,6 +26,7 @@ export async function issueCertificate(client, { studentId, courseId }) {
   );
 
   if (rows.length === 0) {
+    // Sudah pernah terbit (atau belum 100%): kembalikan yang sudah ada jika ada.
     const existing = await client.query(
       `SELECT id, certificate_number FROM certificates WHERE student_id = $1 AND course_id = $2`,
       [studentId, courseId],

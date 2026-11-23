@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { toggleLessonDoneAction } from "@/actions/learning-actions";
 import { Button } from "@/components/ui/button";
 
-
+/** Tombol Mark as Done / Batalkan. Progress dihitung ulang di database. */
 export function MarkDoneButton({ courseId, contentId, completed, nextHref }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -30,7 +30,7 @@ export function MarkDoneButton({ courseId, contentId, completed, nextHref }) {
       } else {
         toast.success(result.message, { description: `Progress course: ${result.progress}%` });
       }
-     
+      // Setelah menandai selesai, langsung lanjut ke materi berikutnya.
       if (!completed && nextHref && !result.justCompleted) router.push(nextHref);
       else router.refresh();
     });
