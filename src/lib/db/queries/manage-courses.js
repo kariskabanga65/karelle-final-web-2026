@@ -1,11 +1,7 @@
 import "server-only";
 import { queryMany, queryOne } from "@/lib/db";
 
-/**
- * Daftar course untuk halaman kelola.
- * teacherId diisi  -> hanya course milik Teacher tersebut.
- * teacherId null   -> semua course (Admin).
- */
+
 export async function listManagedCourses({ teacherId = null, search = "" } = {}) {
   const keyword = search.trim().slice(0, 100);
   const pattern = keyword ? `%${keyword.replace(/[\\%_]/g, "\\$&")}%` : null;
@@ -20,10 +16,10 @@ export async function listManagedCourses({ teacherId = null, search = "" } = {})
   );
 }
 
-/** Data course untuk form edit. */
+
 export async function getCourseForEdit(id) {
   return queryOne(
-    `SELECT id, title, slug, description, category_id, teacher_id, start_date, end_date
+    `SELECT id, title, slug, description, category_id, teacher_id, start_date, end_date, thumbnail_url
        FROM courses WHERE id = $1`,
     [id],
   );

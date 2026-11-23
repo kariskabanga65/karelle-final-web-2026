@@ -5,13 +5,8 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { FormField, FormMessage, SubmitButton } from "./form-field";
+import { ThumbnailField } from "./thumbnail-field";
 
-/**
- * Form Create/Edit Course.
- * - Kategori: dropdown dari tabel categories.
- * - Teacher : dropdown hanya untuk Admin. Untuk Teacher, terisi otomatis.
- * - Tanggal : opsional, kosongkan untuk kelas lifetime access.
- */
 export function CourseForm({ action, course = null, categories, teachers = null, cancelHref }) {
   const [state, formAction, pending] = useActionState(action, null);
   const errors = state?.fieldErrors ?? {};
@@ -22,6 +17,7 @@ export function CourseForm({ action, course = null, categories, teachers = null,
     teacherId: course?.teacher_id,
     startDate: course?.start_date ?? "",
     endDate: course?.end_date ?? "",
+    thumbnailUrl: course?.thumbnail_url ?? "",
     ...(state?.values ?? {}),
   };
 
@@ -52,6 +48,8 @@ export function CourseForm({ action, course = null, categories, teachers = null,
           </FormField>
         )}
       </div>
+
+      <ThumbnailField key={`t-${values.thumbnailUrl}`} defaultValue={values.thumbnailUrl} error={errors.thumbnailUrl?.[0]} />
 
       <fieldset className="space-y-3 rounded-lg border bg-card p-4">
         <legend className="px-1 text-sm font-medium">Rentang waktu (opsional)</legend>

@@ -35,8 +35,8 @@ next-env.d.ts
 credentials*.json
 
 # ===== File upload pengguna (folder tetap ada lewat .gitkeep) =====
-/public/uploads/*
-!/public/uploads/.gitkeep
+# file upload thumbnail (dibuat saat aplikasi berjalan)
+/storage/
 
 # ===== Misc =====
 .DS_Store
