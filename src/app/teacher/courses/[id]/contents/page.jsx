@@ -61,7 +61,9 @@ export default async function CourseContentsPage({ params, searchParams }) {
                 <p className="line-clamp-2 text-sm text-muted-foreground">{lesson.excerpt}</p>
                 <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1"><CheckCircle2 className="size-3.5" /> {lesson.completed_count}/{studentCount} student selesai</span>
-                  <span className="inline-flex items-center gap-1"><MessageSquare className="size-3.5" /> {lesson.comment_count} diskusi</span>
+                  <Link href={`/teacher/courses/${course.id}/contents/${lesson.id}/discussion`} className="inline-flex items-center gap-1 underline-offset-4 hover:text-foreground hover:underline">
+                    <MessageSquare className="size-3.5" /> {lesson.comment_count} diskusi
+                  </Link>
                   <span>Diubah {formatRelative(lesson.updated_at)}</span>
                 </p>
               </div>
