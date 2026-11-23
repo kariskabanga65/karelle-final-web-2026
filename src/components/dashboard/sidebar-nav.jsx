@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bell,
   BookOpen,
   FolderTree,
   GraduationCap,
@@ -13,7 +14,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-/** Menu sidebar untuk setiap role. */
 const NAV_ITEMS = {
   admin: [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -30,13 +30,16 @@ const NAV_ITEMS = {
   student: [
     { href: "/student", label: "Dashboard", icon: LayoutDashboard, exact: true },
     { href: "/student/courses", label: "Kelas Saya", icon: BookOpen },
-    { href: "/student/certificates", label: "Sertifikat", icon: GraduationCap },
   ],
 };
 
 export function SidebarNav({ role, badges = {}, onNavigate }) {
   const pathname = usePathname();
-  const items = [...(NAV_ITEMS[role] ?? []), { href: "/profile", label: "Profil", icon: UserRound, exact: true }];
+  const items = [
+    ...(NAV_ITEMS[role] ?? []),
+    { href: "/notifications", label: "Notifikasi", icon: Bell, exact: true, badgeKey: "unreadNotifications" },
+    { href: "/profile", label: "Profil", icon: UserRound, exact: true },
+  ];
 
   return (
     <nav aria-label="Menu dashboard" className="flex flex-col gap-1">

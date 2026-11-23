@@ -3,15 +3,13 @@ import { ExternalLink } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { UserMenu } from "@/components/layout/user-menu";
 import { getDashboardPath, ROLE_LABELS } from "@/lib/auth/roles";
+import { countUnreadNotifications } from "@/lib/db/queries/notifications";
 import { MobileSidebar } from "./mobile-sidebar";
 import { SidebarNav } from "./sidebar-nav";
 
-/**
- * Kerangka halaman dashboard: sidebar gelap di kiri (desktop),
- * menu geser untuk mobile, dan header dengan menu akun.
- */
-export function DashboardShell({ user, badges = {}, children }) {
+export async function DashboardShell({ user, badges = {}, children }) {
   const roleLabel = ROLE_LABELS[user.role];
+  const allBadges = { ...badges, unreadNotifications: await countUnreadNotifications(user.id) };
   const safeUser = { name: user.name, email: user.email, image: user.image ?? null };
 
   return (
@@ -20,7 +18,7 @@ export function DashboardShell({ user, badges = {}, children }) {
         <Logo className="px-2" />
         <div className="space-y-3">
           <p className="px-3 text-[0.65rem] tracking-[0.35em] text-white/40 uppercase">Panel {roleLabel}</p>
-          <SidebarNav role={user.role} badges={badges} />
+          <SidebarNav role={user.role} badges={allBadges} />
         </div>
         <Link href="/" className="mt-auto flex items-center gap-2 px-3 text-sm text-white/55 hover:text-white">
           <ExternalLink className="size-4" /> Lihat situs
@@ -30,7 +28,7 @@ export function DashboardShell({ user, badges = {}, children }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/90 px-4 backdrop-blur sm:px-8">
           <div className="flex items-center gap-2">
-            <MobileSidebar role={user.role} roleLabel={roleLabel} badges={badges} />
+            <MobileSidebar role={user.role} roleLabel={roleLabel} badges={allBadges} />
             <span className="font-display text-xl lg:hidden">KARÉLLE</span>
           </div>
           <div className="rounded-full bg-ink">
