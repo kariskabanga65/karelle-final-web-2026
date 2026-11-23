@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { CheckCircle2, Circle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-/** Daftar materi di ruang belajar. Materi yang sedang dibuka ditandai. */
+
 export function LessonOutline({ courseId, lessons, locked = false, onNavigate }) {
   const { contentId } = useParams();
 
@@ -31,7 +31,7 @@ export function LessonOutline({ courseId, lessons, locked = false, onNavigate })
                   aria-hidden
                 />
                 <span className="flex-1">
-                  <span className="mr-1.5 font-display tabular-nums opacity-60">{String(lesson.order_index).padStart(2, "0")}</span>
+                  <span className="mr-1.5 font-display tabular-nums opacity-80">{String(lesson.order_index).padStart(2, "0")}</span>
                   {lesson.title}
                 </span>
                 <span className="sr-only">{lesson.completed ? "(selesai)" : "(belum selesai)"}</span>

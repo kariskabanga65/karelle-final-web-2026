@@ -14,6 +14,7 @@ export function CertificatePaper({ certificate, qrSvg, verifyUrl }) {
       id="certificate"
       className="certificate-paper @container relative aspect-[297/210] w-full overflow-hidden bg-[#faf8f4] text-ink shadow-[0_30px_80px_-30px_rgba(0,0,0,0.45)]"
     >
+      {/* Bingkai luar hitam + bingkai dalam silver */}
       <div className="absolute inset-[2.2cqw] border-[0.28cqw] border-ink" />
       <div className="absolute inset-[3.2cqw] border-[0.12cqw] border-silver" />
       {["top-[2.2cqw] left-[2.2cqw]", "top-[2.2cqw] right-[2.2cqw]", "bottom-[2.2cqw] left-[2.2cqw]", "right-[2.2cqw] bottom-[2.2cqw]"].map((pos) => (
@@ -59,7 +60,7 @@ export function CertificatePaper({ certificate, qrSvg, verifyUrl }) {
           <Signature name={issued} role="Tanggal terbit" />
         </div>
         {verifyUrl && (
-          <p className="mt-[1.2cqw] text-ink/50" style={{ fontSize: "0.8cqw" }}>
+          <p className="mt-[1.2cqw] text-ink/70" style={{ fontSize: "0.8cqw" }}>
             Verifikasi keaslian: {verifyUrl}
           </p>
         )}

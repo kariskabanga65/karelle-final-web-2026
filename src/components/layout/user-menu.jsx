@@ -14,15 +14,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils/format";
 
-/** Menu akun untuk user yang sudah login. */
+
 export function UserMenu({ user, dashboardPath, roleLabel }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className="flex items-center gap-3 rounded-full py-1 pr-3 pl-1 text-left text-white outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/50"
-        aria-label="Menu akun"
       >
-        <Avatar className="size-8">
+        <Avatar className="size-8" aria-hidden>
           {user.image && <AvatarImage src={user.image} alt="" className="grayscale" />}
           <AvatarFallback className="bg-white text-xs text-ink">{getInitials(user.name)}</AvatarFallback>
         </Avatar>
@@ -30,6 +29,7 @@ export function UserMenu({ user, dashboardPath, roleLabel }) {
           <span className="text-sm">{user.name.split(" ")[0]}</span>
           <span className="text-[0.65rem] tracking-[0.2em] text-white/60 uppercase">{roleLabel}</span>
         </span>
+        <span className="sr-only">{`${user.name} (${roleLabel}), buka menu akun`}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel>
