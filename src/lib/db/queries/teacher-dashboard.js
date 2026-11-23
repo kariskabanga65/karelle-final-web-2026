@@ -1,6 +1,11 @@
 import "server-only";
 import { queryMany, queryOne } from "@/lib/db";
 
+/**
+ * Query untuk Teacher Dashboard dan halaman Progress Student.
+ * Semua query difilter dengan teacher_id, sehingga Teacher hanya
+ * melihat data course miliknya. Admin memakai teacherId = null (semua).
+ */
 
 export async function getTeacherStats(teacherId) {
   return queryOne(
@@ -21,6 +26,7 @@ export async function getTeacherStats(teacherId) {
   );
 }
 
+/** Ringkasan per course: jumlah materi, student, rata-rata progress, lulus. */
 export async function getTeacherCourseSummaries(teacherId) {
   return queryMany(
     `SELECT c.id, c.title, c.slug, cat.name AS category_name,
@@ -38,6 +44,7 @@ export async function getTeacherCourseSummaries(teacherId) {
   );
 }
 
+/** Aktivitas terbaru di course milik Teacher (enroll, materi selesai, diskusi, lulus). */
 export async function getTeacherActivity(teacherId, limit = 8) {
   return queryMany(
     `SELECT * FROM (
@@ -74,6 +81,7 @@ export async function getTeacherActivity(teacherId, limit = 8) {
   );
 }
 
+/** Pilihan course untuk filter halaman Progress Student. */
 export async function getTeacherCourseOptions(teacherId) {
   return queryMany(
     `SELECT id, title FROM courses
@@ -83,6 +91,10 @@ export async function getTeacherCourseOptions(teacherId) {
   );
 }
 
+/**
+ * Progress setiap student di course milik Teacher.
+ * courseId dan search opsional. Hasil dibatasi per halaman.
+ */
 export async function listStudentProgress({ teacherId, courseId = null, search = "", status = "", page = 1, perPage = 15 }) {
   const keyword = search.trim().slice(0, 100);
   const pattern = keyword ? `%${keyword.replace(/[\\%_]/g, "\\$&")}%` : null;

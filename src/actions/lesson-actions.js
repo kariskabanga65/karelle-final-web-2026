@@ -12,6 +12,18 @@ import { htmlToText, sanitizeLessonHtml } from "@/lib/utils/sanitize";
 import { isUuid } from "@/lib/utils/slug";
 import { LESSON_MIN_TEXT, lessonSchema } from "@/lib/validations/lesson";
 
+/**
+ * Content Management (materi/lesson) untuk Teacher pemilik course dan Admin.
+ *
+ * Keamanan:
+ * 1. authorizeAction  -> wajib login sebagai Teacher/Admin.
+ * 2. assertCourseOwner -> course harus milik Teacher yang login
+ *    (dicek ulang di setiap aksi karena Server Action bisa dipanggil langsung).
+ * 3. Setiap query materi menyertakan course_id, jadi materi course lain
+ *    tidak bisa diubah walaupun ID-nya ditebak.
+ * 4. HTML dibersihkan (sanitize) sebelum disimpan untuk mencegah XSS.
+ */
+
 export async function createLessonAction(courseId, _prevState, formData) {
   const { user, error } = await authorizeAction([ROLES.TEACHER]);
   if (error) return error;
@@ -25,6 +37,8 @@ export async function createLessonAction(courseId, _prevState, formData) {
 
   try {
     await withTransaction(async (client) => {
+      // Kunci baris course agar dua materi yang dibuat bersamaan
+      // tidak mendapat order_index yang sama.
       await client.query(`SELECT id FROM courses WHERE id = $1 FOR UPDATE`, [course.id]);
       const { rows } = await client.query(
         `SELECT COALESCE(MAX(order_index), 0) + 1 AS next FROM course_contents WHERE course_id = $1`,
@@ -34,6 +48,8 @@ export async function createLessonAction(courseId, _prevState, formData) {
         `INSERT INTO course_contents (course_id, title, content, order_index) VALUES ($1, $2, $3, $4)`,
         [course.id, parsed.data.title, parsed.data.content, rows[0].next],
       );
+
+      // Beri tahu student yang sudah mengikuti course ini.
       await client.query(
         `INSERT INTO notifications (user_id, type, title, message, link)
          SELECT e.student_id, 'system', 'Materi baru', $2, $3
@@ -96,12 +112,14 @@ export async function deleteLessonAction(courseId, lessonId) {
     });
     if (!title) return actionError("Materi tidak ditemukan atau bukan milik Anda.");
     revalidateLessons(course);
+    // Progress student dihitung ulang otomatis oleh trigger database.
     return actionSuccess(`Materi "${title}" dihapus.`);
   } catch (err) {
     return actionError(getDbErrorMessage(err, "Gagal menghapus materi."));
   }
 }
 
+/** Menukar urutan materi dengan materi di atas/bawahnya. */
 export async function moveLessonAction(courseId, lessonId, direction) {
   const { user, error } = await authorizeAction([ROLES.TEACHER]);
   if (error) return error;
@@ -128,7 +146,10 @@ export async function moveLessonAction(courseId, lessonId, direction) {
               WHERE course_id = $1 AND order_index > $2 ORDER BY order_index ASC LIMIT 1`,
         [course.id, current[0].order_index],
       );
-      if (neighbor.length === 0) return true; 
+      if (neighbor.length === 0) return true; // sudah paling atas/bawah
+
+      // UNIQUE(course_id, order_index) bersifat DEFERRABLE: pengecekannya
+      // ditunda sampai COMMIT, sehingga dua materi bisa bertukar urutan.
       await client.query(`SET CONSTRAINTS course_contents_course_order_key DEFERRED`);
       await client.query(
         `UPDATE course_contents
@@ -146,6 +167,9 @@ export async function moveLessonAction(courseId, lessonId, direction) {
   }
 }
 
+// ---------------------------------------------------------------
+
+/** Course milik user (Admin boleh semua). null jika tidak berhak. */
 async function assertCourseOwner(user, courseId) {
   if (!isUuid(courseId)) return null;
   return queryOne(
@@ -155,6 +179,7 @@ async function assertCourseOwner(user, courseId) {
   );
 }
 
+/** Validasi + sanitasi HTML. Semua error field dikumpulkan sekaligus. */
 function parseLesson(input) {
   const parsed = lessonSchema.safeParse(input);
   const fieldErrors = parsed.success ? {} : { ...z.flattenError(parsed.error).fieldErrors };
@@ -170,6 +195,7 @@ function parseLesson(input) {
   return { data: { title: parsed.data.title, content } };
 }
 
+/** Merapikan urutan menjadi 1, 2, 3, ... setelah ada materi yang dihapus. */
 async function renumberLessons(client, courseId) {
   await client.query(`SET CONSTRAINTS course_contents_course_order_key DEFERRED`);
   await client.query(

@@ -2,6 +2,13 @@ import "server-only";
 import { queryMany, queryOne } from "@/lib/db";
 import { htmlToText } from "@/lib/utils/sanitize";
 
+/**
+ * Course yang boleh dikelola user.
+ * ownerId diisi  -> hanya jika course milik Teacher tersebut.
+ * ownerId null   -> Admin (semua course).
+ * Mengembalikan null jika tidak ditemukan / bukan milik user,
+ * sehingga halaman bisa menampilkan 404 (tidak membocorkan keberadaan data).
+ */
 export async function getManageableCourse(courseId, ownerId) {
   return queryOne(
     `SELECT c.id, c.title, c.slug, c.teacher_id, u.name AS teacher_name
@@ -12,6 +19,7 @@ export async function getManageableCourse(courseId, ownerId) {
   );
 }
 
+/** Daftar materi satu course + jumlah student yang sudah menyelesaikannya. */
 export async function listLessons(courseId) {
   const rows = await queryMany(
     `SELECT cc.id, cc.title, cc.order_index, cc.updated_at,
@@ -23,10 +31,11 @@ export async function listLessons(courseId) {
       ORDER BY cc.order_index`,
     [courseId],
   );
+  // Ringkasan teks polos (tanpa tag HTML) untuk ditampilkan di daftar.
   return rows.map(({ content_head: head, ...lesson }) => ({ ...lesson, excerpt: htmlToText(head).slice(0, 220) }));
 }
 
-
+/** Satu materi untuk form edit, dipastikan milik course tersebut. */
 export async function getLessonForEdit(lessonId, courseId) {
   return queryOne(
     `SELECT id, course_id, title, content, order_index

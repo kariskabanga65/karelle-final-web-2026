@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+/**
+ * Form materi (lesson). content berisi HTML dari Rich Text Editor;
+ * panjang minimal dicek dari teks polosnya di Server Action
+ * setelah HTML dibersihkan.
+ */
 export const lessonSchema = z.object({
   title: z
     .string({ error: "Judul materi wajib diisi." })

@@ -14,6 +14,7 @@ export default async function TeacherEditCoursePage({ params }) {
   const user = await requireRole(ROLES.TEACHER);
   const { id } = await params;
   const course = isUuid(id) ? await getCourseForEdit(id) : null;
+  // Course milik Teacher lain diperlakukan seperti tidak ada (404).
   if (!course || (user.role !== ROLES.ADMIN && course.teacher_id !== user.id)) notFound();
   const categories = await getAllCategories();
 

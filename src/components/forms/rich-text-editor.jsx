@@ -23,14 +23,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-
+/**
+ * Rich Text Editor (Tiptap) untuk isi materi.
+ * Hasilnya berupa HTML yang dikirim lewat <input type="hidden" name={name}>.
+ * HTML ini dibersihkan lagi di server (sanitize) sebelum disimpan.
+ */
 export function RichTextEditor({ name, defaultValue = "", invalid = false, describedBy, labelId }) {
   const [html, setHtml] = useState(defaultValue);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
 
   const editor = useEditor({
-    immediatelyRender: false, 
+    immediatelyRender: false, // wajib untuk Next.js (hindari hydration mismatch)
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
@@ -52,7 +56,7 @@ export function RichTextEditor({ name, defaultValue = "", invalid = false, descr
     onUpdate: ({ editor: current }) => setHtml(current.isEmpty ? "" : current.getHTML()),
   });
 
-
+  // Status tombol toolbar (aktif/nonaktif) mengikuti posisi kursor.
   const active = useEditorState({
     editor,
     selector: ({ editor: e }) =>
@@ -182,6 +186,7 @@ function ToolButton({ label, icon: Icon, pressed, onClick, disabled }) {
       title={label}
       aria-label={label}
       aria-pressed={pressed === undefined ? undefined : Boolean(pressed)}
+      // Cegah tombol mengambil fokus, agar kursor & seleksi di editor tidak hilang.
       onMouseDown={(event) => event.preventDefault()}
       onClick={onClick}
       disabled={disabled}

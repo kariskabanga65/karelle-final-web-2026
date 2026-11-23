@@ -22,6 +22,7 @@ const ACTIVITY = {
 
 export default async function TeacherDashboardPage() {
   const user = await requireRole(ROLES.TEACHER);
+  // Admin yang membuka panel Teacher melihat data semua course.
   const teacherId = user.role === ROLES.ADMIN ? null : user.id;
   const [stats, courses, activity] = await Promise.all([
     getTeacherStats(teacherId),

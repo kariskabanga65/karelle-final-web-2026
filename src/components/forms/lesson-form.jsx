@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { FormField, FormMessage, SubmitButton } from "./form-field";
 import { RichTextEditor } from "./rich-text-editor";
 
-
+/** Form tambah/edit materi dengan Rich Text Editor. */
 export function LessonForm({ action, lesson = null, cancelHref }) {
   const [state, formAction, pending] = useActionState(action, null);
   const errors = state?.fieldErrors ?? {};
@@ -21,6 +21,7 @@ export function LessonForm({ action, lesson = null, cancelHref }) {
       <div className="space-y-2">
         <Label id="content-label">Isi materi</Label>
         <RichTextEditor
+          // key: editor dibuat ulang dengan isi terakhir jika validasi gagal
           key={state?.values ? `v-${state.values.content?.length}` : "initial"}
           name="content"
           defaultValue={values.content}

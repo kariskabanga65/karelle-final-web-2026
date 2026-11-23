@@ -18,6 +18,7 @@ export default async function TeacherCoursesPage({ searchParams }) {
   const user = await requireRole(ROLES.TEACHER);
   const params = await searchParams;
   const search = typeof params.search === "string" ? params.search : "";
+  // Teacher hanya melihat course miliknya (filter teacher_id di query SQL).
   const courses = await listManagedCourses({ teacherId: user.role === ROLES.ADMIN ? null : user.id, search });
 
   return (
