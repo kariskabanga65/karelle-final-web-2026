@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { toggleLessonDoneAction } from "@/actions/learning-actions";
 import { Button } from "@/components/ui/button";
 
+
 export function MarkDoneButton({ courseId, contentId, completed, nextHref }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -19,11 +20,17 @@ export function MarkDoneButton({ courseId, contentId, completed, nextHref }) {
         return;
       }
       if (result.justCompleted) {
-        toast.success(result.message, { description: "Progress Anda 100%. Luar biasa!", duration: 6000 });
+        toast.success(result.message, {
+          description: result.certificateId ? "Sertifikat Anda sudah terbit." : "Progress Anda 100%. Luar biasa!",
+          duration: 8000,
+          action: result.certificateId
+            ? { label: "Lihat sertifikat", onClick: () => router.push(`/student/certificates/${result.certificateId}`) }
+            : undefined,
+        });
       } else {
         toast.success(result.message, { description: `Progress course: ${result.progress}%` });
       }
-      
+     
       if (!completed && nextHref && !result.justCompleted) router.push(nextHref);
       else router.refresh();
     });

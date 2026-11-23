@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { authorizeAction } from "@/lib/auth/action-guard";
+import { issueCertificate } from "@/lib/certificates/issue";
 import { ROLES } from "@/lib/auth/roles";
 import { withTransaction } from "@/lib/db";
 import { getDbErrorMessage } from "@/lib/db/errors";
@@ -46,13 +47,19 @@ export async function toggleLessonDoneAction(courseId, contentId, done) {
       }
       await client.query(`UPDATE enrollments SET last_content_id = $2 WHERE id = $1`, [enrollment.id, contentId]);
 
+      
       const { rows: updated } = await client.query(
         `SELECT progress_percent, status FROM enrollments WHERE id = $1`,
         [enrollment.id],
       );
+      
+      const certificate =
+        updated[0].status === "completed" ? await issueCertificate(client, { studentId: user.id, courseId }) : null;
+
       return {
         progress: Number(updated[0].progress_percent),
         justCompleted: enrollment.status !== "completed" && updated[0].status === "completed",
+        certificateId: certificate?.created ? certificate.id : null,
       };
     });
 
@@ -60,9 +67,10 @@ export async function toggleLessonDoneAction(courseId, contentId, done) {
     revalidatePath(`/student/learn/${courseId}`, "layout");
     revalidatePath("/student");
     revalidatePath("/student/courses");
+    revalidatePath("/student/certificates");
     return actionSuccess(
       result.justCompleted ? "Selamat! Anda menyelesaikan seluruh materi course ini." : done ? "Materi ditandai selesai." : "Tanda selesai dibatalkan.",
-      { progress: result.progress, justCompleted: result.justCompleted },
+      { progress: result.progress, justCompleted: result.justCompleted, certificateId: result.certificateId },
     );
   } catch (err) {
     return actionError(getDbErrorMessage(err, "Gagal memperbarui progress."));
