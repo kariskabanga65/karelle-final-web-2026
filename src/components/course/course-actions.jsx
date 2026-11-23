@@ -6,14 +6,6 @@ import { ROLES } from "@/lib/auth/roles";
 import { formatPercent } from "@/lib/utils/format";
 import { EnrollButton } from "./enroll-button";
 
-/**
- * Tombol dinamis di kartu/detail course, sesuai siapa yang melihat:
- * - Guest                    : Login / Daftar
- * - Student belum ikut       : Ikuti Course
- * - Student sudah ikut       : progress + Lanjutkan Belajar
- * - Teacher pemilik course   : Kelola Course
- * - Admin                    : Kelola di panel Admin
- */
 export function CourseActions({ course, viewer, enrollment, layout = "card" }) {
   const isDetail = layout === "detail";
   const size = isDetail ? "lg" : "default";
@@ -29,8 +21,8 @@ export function CourseActions({ course, viewer, enrollment, layout = "card" }) {
         </Button>
       </div>
     );
-  } else if (viewer.role === ROLES.STUDENT) {
-    primary = enrollment ? (
+  } else if (enrollment && viewer.role !== ROLES.ADMIN && viewer.id !== course.teacher_id) {
+    primary = (
       <div className="w-full space-y-3">
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
@@ -45,9 +37,9 @@ export function CourseActions({ course, viewer, enrollment, layout = "card" }) {
           </Link>
         </Button>
       </div>
-    ) : (
-      <EnrollButton courseId={course.id} size={size} />
     );
+  } else if (viewer.role === ROLES.STUDENT) {
+    primary = <EnrollButton courseId={course.id} size={size} />;
   } else if (viewer.role === ROLES.TEACHER) {
     primary =
       viewer.id === course.teacher_id ? (

@@ -5,7 +5,7 @@ import { Discussion } from "@/components/discussion/discussion";
 import { MarkDoneButton } from "@/components/learning/mark-done-button";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth/session";
-import { ROLES } from "@/lib/auth/roles";
+import { LEARNER_ROLES, ROLES } from "@/lib/auth/roles";
 import { getLesson, getLessonOutline, rememberLastLesson } from "@/lib/db/queries/learning";
 import { getLearnerContext } from "@/lib/learning/access";
 import { formatDate } from "@/lib/utils/format";
@@ -15,7 +15,7 @@ import { isUuid } from "@/lib/utils/slug";
 export const metadata = { title: "Materi | KARÉLLE" };
 
 export default async function LessonPage({ params }) {
-  const user = await requireRole(ROLES.STUDENT);
+  const user = await requireRole(...LEARNER_ROLES);
   const { courseId, contentId } = await params;
   const { course, enrollment, preview } = await getLearnerContext(user.id, user.role, courseId);
   if (!isUuid(contentId)) notFound();

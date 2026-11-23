@@ -6,7 +6,6 @@ export function RoleBadge({ role }) {
   return <Badge variant={variant}>{ROLE_LABELS[role]}</Badge>;
 }
 
-/** Status akun dihitung dari pengajuan Teacher terbaru. */
 export function AccountStatusBadge({ role, applicationStatus }) {
   if (applicationStatus === "pending") return <Badge variant="warning">Pending Teacher</Badge>;
   if (applicationStatus === "rejected" && role === "student") return <Badge variant="destructive">Pengajuan ditolak</Badge>;

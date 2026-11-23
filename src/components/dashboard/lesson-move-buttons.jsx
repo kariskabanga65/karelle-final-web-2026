@@ -6,7 +6,6 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-/** Tombol naik/turun untuk mengubah urutan materi. */
 export function LessonMoveButtons({ moveUp, moveDown, isFirst, isLast, title }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();

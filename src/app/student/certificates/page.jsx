@@ -6,14 +6,16 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth/session";
-import { ROLES } from "@/lib/auth/roles";
+import { redirectTeacherWithoutLearning } from "@/lib/learning/access";
+import { LEARNER_ROLES, ROLES } from "@/lib/auth/roles";
 import { listClaimableCourses, listStudentCertificates } from "@/lib/db/queries/certificates";
 import { formatDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Sertifikat Saya | KARÉLLE" };
 
 export default async function StudentCertificatesPage() {
-  const user = await requireRole(ROLES.STUDENT);
+  const user = await requireRole(...LEARNER_ROLES);
+  await redirectTeacherWithoutLearning(user);
   const [certificates, claimable] = await Promise.all([listStudentCertificates(user.id), listClaimableCourses(user.id)]);
 
   return (

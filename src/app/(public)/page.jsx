@@ -33,7 +33,7 @@ export default async function HomePage() {
     getPopularCourses(5),
     getTeachers({ limit: 3 }),
     getPlatformStats(),
-    getEnrollmentMap(user?.role === "student" ? user.id : null),
+    getEnrollmentMap(user && user.role !== "admin" ? user.id : null),
   ]);
 
   return (

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCoursePeriod } from "@/lib/utils/format";
 
-/** Tabel course untuk Admin (/admin) dan Teacher (/teacher). */
 export function CourseTable({ courses, basePath, showTeacher = false, extraActions }) {
   return (
     <div className="overflow-hidden rounded-xl border bg-card shadow-xs">

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { authorizeAction } from "@/lib/auth/action-guard";
 import { issueCertificate } from "@/lib/certificates/issue";
-import { ROLES } from "@/lib/auth/roles";
+import { LEARNER_ROLES, ROLES } from "@/lib/auth/roles";
 import { withTransaction } from "@/lib/db";
 import { getDbErrorMessage } from "@/lib/db/errors";
 import { actionError, actionSuccess } from "@/lib/utils/action-result";
@@ -11,9 +11,9 @@ import { isUuid } from "@/lib/utils/slug";
 
 
 export async function toggleLessonDoneAction(courseId, contentId, done) {
-  const { user, error } = await authorizeAction([ROLES.STUDENT]);
+  const { user, error } = await authorizeAction(LEARNER_ROLES);
   if (error) return error;
-  if (user.role !== ROLES.STUDENT) return actionError("Mode pratinjau: hanya Student yang dapat menandai materi.");
+  if (user.role === ROLES.ADMIN) return actionError("Mode pratinjau: Admin tidak dapat menandai materi.");
   if (!isUuid(courseId) || !isUuid(contentId)) return actionError("Materi tidak ditemukan.");
 
   try {
@@ -47,12 +47,10 @@ export async function toggleLessonDoneAction(courseId, contentId, done) {
       }
       await client.query(`UPDATE enrollments SET last_content_id = $2 WHERE id = $1`, [enrollment.id, contentId]);
 
-      
       const { rows: updated } = await client.query(
         `SELECT progress_percent, status FROM enrollments WHERE id = $1`,
         [enrollment.id],
       );
-      
       const certificate =
         updated[0].status === "completed" ? await issueCertificate(client, { studentId: user.id, courseId }) : null;
 

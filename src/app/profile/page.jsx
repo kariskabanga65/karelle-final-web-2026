@@ -15,19 +15,11 @@ import { getLatestTeacherApplication } from "@/lib/db/queries/teacher-applicatio
 import { formatDate, formatPercent, getInitials } from "@/lib/utils/format";
 
 export const metadata = { title: "Profil | KARÉLLE" };
-
-/**
- * Profil pengguna: info akun, kelas yang diikuti (Student) atau diajar (Teacher),
- * edit profil, dan ganti password.
- *
- * Notifikasi Welcome Teacher dihitung di Server Component ini:
- * muncul hanya jika approved_at kurang dari 24 jam yang lalu.
- */
 export default async function ProfilePage() {
   const user = await requireUser();
   const [application, enrolled, teaching] = await Promise.all([
     getLatestTeacherApplication(user.id),
-    user.role === ROLES.STUDENT ? listStudentCourses(user.id) : [],
+    user.role !== ROLES.ADMIN ? listStudentCourses(user.id) : [],
     user.role === ROLES.TEACHER ? getTeacherCourseSummaries(user.id) : [],
   ]);
 
@@ -77,7 +69,7 @@ export default async function ProfilePage() {
         </div>
       )}
 
-      {user.role === ROLES.STUDENT && (
+      {(user.role === ROLES.STUDENT || enrolled.length > 0) && (
         <CourseSection title="Kelas yang diikuti" icon={GraduationCap} emptyText="Belum mengikuti kelas." emptyHref="/courses" emptyLabel="Lihat katalog">
           {enrolled.map((course) => (
             <CourseRow

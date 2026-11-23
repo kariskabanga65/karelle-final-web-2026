@@ -9,6 +9,7 @@ import {
   FolderTree,
   GraduationCap,
   LayoutDashboard,
+  Library,
   UserCheck,
   UserRound,
   Users,
@@ -36,10 +37,16 @@ const NAV_ITEMS = {
   ],
 };
 
-export function SidebarNav({ role, badges = {}, onNavigate }) {
+const TEACHER_LEARNING_ITEMS = [
+  { href: "/student/courses", label: "Kelas Saya", icon: Library },
+  { href: "/student/certificates", label: "Sertifikat", icon: Award },
+];
+
+export function SidebarNav({ role, badges = {}, showLearning = false, onNavigate }) {
   const pathname = usePathname();
   const items = [
     ...(NAV_ITEMS[role] ?? []),
+    ...(role === "teacher" && showLearning ? TEACHER_LEARNING_ITEMS : []),
     { href: "/notifications", label: "Notifikasi", icon: Bell, exact: true, badgeKey: "unreadNotifications" },
     { href: "/profile", label: "Profil", icon: UserRound, exact: true },
   ];

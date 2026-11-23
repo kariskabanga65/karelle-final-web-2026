@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, Award, BookOpen, CheckCircle2, Compass, TrendingUp } from "lucide-react";
 import { CourseCard } from "@/components/course/course-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -11,7 +12,8 @@ import { EnrolledCourseCard } from "@/components/student/enrolled-course-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { requireRole } from "@/lib/auth/session";
-import { ROLES } from "@/lib/auth/roles";
+import { redirectTeacherWithoutLearning } from "@/lib/learning/access";
+import { LEARNER_ROLES, ROLES } from "@/lib/auth/roles";
 import { listNotifications } from "@/lib/db/queries/notifications";
 import { getRecommendedCourses, getStudentStats, listStudentCourses } from "@/lib/db/queries/student";
 import { formatPercent } from "@/lib/utils/format";
@@ -19,7 +21,11 @@ import { formatPercent } from "@/lib/utils/format";
 export const metadata = { title: "Student Dashboard | KARÉLLE" };
 
 export default async function StudentDashboardPage({ searchParams }) {
-  const user = await requireRole(ROLES.STUDENT);
+  const user = await requireRole(...LEARNER_ROLES);
+    if (user.role === ROLES.TEACHER) {
+    await redirectTeacherWithoutLearning(user);
+    redirect("/student/courses");
+  }
   const { welcome } = await searchParams;
   const [stats, courses, notifications, recommended] = await Promise.all([
     getStudentStats(user.id),

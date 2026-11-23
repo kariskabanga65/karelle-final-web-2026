@@ -1,4 +1,3 @@
-/** Judul halaman dashboard + tombol aksi di kanan. */
 export function PageHeader({ eyebrow, title, description, children }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">

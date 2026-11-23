@@ -18,7 +18,7 @@ export default async function CourseCatalogPage({ searchParams }) {
   const [categories, courses, enrollments] = await Promise.all([
     getCategoriesWithCourseCount(),
     searchCourses({ search, categorySlug }),
-    getEnrollmentMap(user?.role === "student" ? user.id : null),
+    getEnrollmentMap(user && user.role !== "admin" ? user.id : null),
   ]);
   const activeCategory = categories.find((category) => category.slug === categorySlug);
   const viewer = user ? { id: user.id, role: user.role } : null;

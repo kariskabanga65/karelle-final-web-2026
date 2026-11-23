@@ -25,7 +25,7 @@ export default async function CourseDetailPage({ params }) {
   const user = await getCurrentUser();
   const [outline, enrollments, teachers] = await Promise.all([
     getCourseOutline(course.id),
-    getEnrollmentMap(user?.role === "student" ? user.id : null),
+    getEnrollmentMap(user && user.role !== "admin" ? user.id : null),
     getTeachers(),
   ]);
   const teacher = teachers.find((item) => item.id === course.teacher_id);

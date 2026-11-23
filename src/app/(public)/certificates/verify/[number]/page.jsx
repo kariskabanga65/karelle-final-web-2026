@@ -6,7 +6,6 @@ import { formatDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Hasil Verifikasi Sertifikat | KARÉLLE", robots: { index: false } };
 
-
 export default async function VerifyResultPage({ params }) {
   const { number: raw } = await params;
   const number = decodeURIComponent(raw).trim().toUpperCase();

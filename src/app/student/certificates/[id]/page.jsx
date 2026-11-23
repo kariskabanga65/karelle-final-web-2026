@@ -7,7 +7,7 @@ import { CertificateToolbar } from "@/components/certificates/certificate-toolba
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { FlashToast } from "@/components/shared/flash-toast";
 import { requireRole } from "@/lib/auth/session";
-import { ROLES } from "@/lib/auth/roles";
+import { LEARNER_ROLES, ROLES } from "@/lib/auth/roles";
 import { getVerifyUrl } from "@/lib/certificates/verify-url";
 import { getCertificateForViewer } from "@/lib/db/queries/certificates";
 import { isUuid } from "@/lib/utils/slug";
@@ -15,7 +15,7 @@ import { isUuid } from "@/lib/utils/slug";
 export const metadata = { title: "Sertifikat | KARÉLLE" };
 
 export default async function CertificatePage({ params, searchParams }) {
-  const user = await requireRole(ROLES.STUDENT);
+  const user = await requireRole(...LEARNER_ROLES);
   const { id } = await params;
   const { issued } = await searchParams;
   const certificate = isUuid(id) ? await getCertificateForViewer(id, user.role === ROLES.ADMIN ? null : user.id) : null;

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarNav } from "./sidebar-nav";
 
-export function MobileSidebar({ role, roleLabel, badges }) {
+export function MobileSidebar({ role, roleLabel, badges, showLearning = false }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -21,7 +21,7 @@ export function MobileSidebar({ role, roleLabel, badges }) {
           <SheetDescription className="text-white/60">Panel {roleLabel}</SheetDescription>
         </SheetHeader>
         <div className="px-3">
-          <SidebarNav role={role} badges={badges} onNavigate={() => setOpen(false)} />
+          <SidebarNav role={role} badges={badges} showLearning={showLearning} onNavigate={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>

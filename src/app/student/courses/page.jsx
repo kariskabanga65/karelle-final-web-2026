@@ -6,7 +6,8 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { EnrolledCourseCard } from "@/components/student/enrolled-course-card";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth/session";
-import { ROLES } from "@/lib/auth/roles";
+import { redirectTeacherWithoutLearning } from "@/lib/learning/access";
+import { LEARNER_ROLES, ROLES } from "@/lib/auth/roles";
 import { listStudentCourses } from "@/lib/db/queries/student";
 import { cn } from "@/lib/utils/cn";
 
@@ -19,7 +20,8 @@ const TABS = [
 ];
 
 export default async function StudentCoursesPage({ searchParams }) {
-  const user = await requireRole(ROLES.STUDENT);
+  const user = await requireRole(...LEARNER_ROLES);
+  await redirectTeacherWithoutLearning(user);
   const params = await searchParams;
   const status = ["active", "completed"].includes(params.status) ? params.status : "";
   const [courses, all] = await Promise.all([listStudentCourses(user.id, status), status ? listStudentCourses(user.id) : null]);
@@ -27,8 +29,18 @@ export default async function StudentCoursesPage({ searchParams }) {
 
   return (
     <DashboardShell user={user}>
-      <PageHeader eyebrow="My Courses" title="Kelas saya" description="Semua kelas yang Anda ikuti beserta progres belajarnya.">
-        <Button asChild variant="outline"><Link href="/courses"><Compass /> Cari kelas lain</Link></Button>
+      <PageHeader
+        eyebrow="My Courses"
+        title="Kelas saya"
+        description={
+          user.role === ROLES.TEACHER
+            ? "Kelas yang Anda ikuti sebelum menjadi Teacher. Progres dan sertifikatnya tetap milik Anda."
+            : "Semua kelas yang Anda ikuti beserta progres belajarnya."
+        }
+      >
+        {user.role === ROLES.STUDENT && (
+          <Button asChild variant="outline"><Link href="/courses"><Compass /> Cari kelas lain</Link></Button>
+        )}
       </PageHeader>
 
       <nav aria-label="Filter status kelas" className="flex flex-wrap gap-2">
@@ -60,7 +72,7 @@ export default async function StudentCoursesPage({ searchParams }) {
           title={status === "completed" ? "Belum ada kelas yang selesai" : status === "active" ? "Tidak ada kelas yang sedang dipelajari" : "Belum mengikuti kelas"}
           description={status ? "Coba lihat tab lainnya." : "Pilih kelas dari katalog dan mulai belajar."}
         >
-          {!status && <Button asChild><Link href="/courses">Lihat katalog</Link></Button>}
+          {!status && user.role === ROLES.STUDENT && <Button asChild><Link href="/courses">Lihat katalog</Link></Button>}
         </EmptyState>
       )}
     </DashboardShell>

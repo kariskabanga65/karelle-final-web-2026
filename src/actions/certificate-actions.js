@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { authorizeAction } from "@/lib/auth/action-guard";
-import { ROLES } from "@/lib/auth/roles";
+import { LEARNER_ROLES, ROLES } from "@/lib/auth/roles";
 import { issueCertificate } from "@/lib/certificates/issue";
 import { withTransaction } from "@/lib/db";
 import { getDbErrorMessage } from "@/lib/db/errors";
@@ -12,9 +12,9 @@ import { isUuid } from "@/lib/utils/slug";
 
 
 export async function claimCertificateAction(courseId) {
-  const { user, error } = await authorizeAction([ROLES.STUDENT]);
+  const { user, error } = await authorizeAction(LEARNER_ROLES);
   if (error) return error;
-  if (user.role !== ROLES.STUDENT) return actionError("Hanya Student yang dapat menerbitkan sertifikat.");
+  if (user.role === ROLES.ADMIN) return actionError("Admin tidak memiliki enrollment untuk diterbitkan sertifikatnya.");
   if (!isUuid(courseId)) return actionError("Course tidak ditemukan.");
 
   let certificate;
