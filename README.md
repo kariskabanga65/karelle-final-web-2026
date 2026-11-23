@@ -25,15 +25,16 @@ src/
 │   ├── (public)/      Homepage, katalog, detail course, teacher, verifikasi sertifikat
 │   ├── (auth)/        Login, register student/teacher, forgot password
 │   ├── dashboard/     Redirect ke dashboard sesuai role
-│   ├── profile/       Profil pengguna
+│   ├── profile/       Profil pengguna, edit profil, ganti password
+│   ├── notifications/ Notifikasi semua role
 │   ├── admin/         Modul Admin
 │   ├── teacher/       Modul Teacher
 │   ├── student/       Modul Student
 │   └── api/           Route Handlers
-├── components/        ui/, layout/, forms/, shared/
-├── lib/               auth/, db/, validations/, utils/
+├── components/        ui/, layout/, forms/, shared/, home/, course/, dashboard/,
+│                      learning/, discussion/, notifications/, certificates/, student/
+├── lib/               auth/, db/ (queries), validations/, utils/, learning/, certificates/
 ├── actions/           Server Actions
-├── hooks/
 └── middleware.js
 database/
 ├── schema.sql
@@ -74,7 +75,7 @@ Gambar dipakai untuk keperluan tugas kuliah (non-komersial). Hak cipta tetap mil
 ## Persyaratan
 
 - Node.js 20.9 atau lebih baru
-- PostgreSQL 14 atau lebih baru (disarankan memakai pgAdmin 4)
+- PostgreSQL 18 atau lebih baru (disarankan memakai pgAdmin 4)
 
 ## Setup Database (pgAdmin)
 
@@ -139,18 +140,41 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 - **Better Auth** menangani register, login, logout, session, dan reset password (`/api/auth/*`).
 - **bcryptjs** dipasang ke Better Auth sebagai fungsi hash/verify password (`src/lib/auth/password.js`).
 - Role **tidak bisa** dikirim dari form register. Semua pendaftar menjadi `student`. Pendaftar Teacher mendapat pengajuan berstatus `pending`.
+- Aturan ubah role oleh Admin (dicek di server): Admin tidak bisa menurunkan role akunnya sendiri, dan **Teacher yang masih memiliki course tidak bisa diubah role-nya** sebelum course-nya dipindahkan atau dihapus. Mengubah Student menjadi Teacher otomatis menyetujui pengajuan yang masih pending.
 - Login dibatasi Better Auth (rate limit) untuk mencegah brute force.
 - Isi materi dari Rich Text Editor **dibersihkan di server** (`src/lib/utils/sanitize.js`) sebelum disimpan: `<script>`, atribut `on*`, dan link `javascript:` dibuang untuk mencegah XSS.
 - Server Action materi menerima `courseId` dari client, jadi kepemilikan course **dicek ulang di setiap aksi**. Request yang dimanipulasi ke course Teacher lain ditolak.
+- Semua query memakai **parameter** (`$1`, `$2`, ...), tidak ada input pengguna yang digabung langsung ke SQL (anti SQL injection).
+- `callbackUrl` setelah login divalidasi dengan parser URL (`getSafeRedirectPath`), sehingga tidak bisa diarahkan ke situs lain (anti open redirect).
+- Cookie session bersifat `HttpOnly` dan `SameSite=Lax`, dan otomatis `Secure` saat aplikasi berjalan di HTTPS.
+- **Security headers** di `next.config.mjs`: `X-Frame-Options: DENY` dan `frame-ancestors 'none'` (anti clickjacking), `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, serta header `X-Powered-By` dimatikan.
 
 **Forgot Password:** proyek ini belum memakai layanan email, jadi tautan reset password ditampilkan di **terminal** tempat `npm run dev` berjalan. Salin tautan tersebut ke browser.
 
-## Fitur Teacher
+## Route Handlers (API)
+
+Semua respons berformat JSON `{ success, ... }`. Input divalidasi dengan **Zod**, lalu status HTTP disesuaikan (400 input salah, 401 belum login, 403 role tidak sesuai, 404 tidak ditemukan, 413 file terlalu besar, 415 format tidak didukung).
+
+| Method | Endpoint | Akses | Keterangan |
+|---|---|---|---|
+| `GET` / `POST` | `/api/auth/*` | Publik | Better Auth: login, register, session, reset password |
+| `GET` | `/api/courses?search=&category=&page=&limit=` | Publik | Katalog course (limit maks. 50, category berupa slug) |
+| `GET` | `/api/certificates/verify/[number]` | Publik | Verifikasi sertifikat, mis. `/api/certificates/verify/KRL-2026-A1B2C3D4E5` |
+| `POST` | `/api/uploads` (multipart, field `file`) | Teacher & Admin | Upload thumbnail course: JPG/PNG/WEBP maks. 2 MB |
+| `GET` | `/api/uploads/[file]` | Publik | Menyajikan thumbnail yang sudah diunggah |
+
+Keamanan upload:
+- Role dicek di server dengan `authorizeRequest()` (`src/lib/auth/api-guard.js`).
+- Jenis file ditentukan dari **isi file** (magic bytes), bukan dari nama atau `Content-Type`. File `.png` palsu dan SVG ditolak.
+- Nama file dibuat ulang (UUID), dan nama file saat dibaca divalidasi ketat sehingga tidak bisa dipakai untuk path traversal (`../`).
+- File disimpan di `storage/uploads/` (di luar `public/` dan diabaikan git). Thumbnail lama dihapus saat diganti atau saat course dihapus.
+
+## Fitur Teacher 
 
 | Halaman | Fitur |
 |---|---|
 | `/teacher` | Dashboard: jumlah course, materi, student, rata-rata progress, ringkasan per course, aktivitas student terbaru |
-| `/teacher/courses` | Daftar course milik sendiri, buat, edit, dan hapus course |
+| `/teacher/courses` | Daftar course milik sendiri, buat, edit (termasuk upload thumbnail), dan hapus course |
 | `/teacher/courses/[id]/contents` | Kelola materi: tambah, edit (Rich Text Editor), hapus, dan ubah urutan (naik/turun) |
 | `/teacher/students` | Progress student per course: persentase, jumlah materi selesai, materi terakhir, filter, dan pencarian |
 
@@ -178,8 +202,9 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 - Notifikasi otomatis: Teacher saat ada pertanyaan baru, penulis komentar saat dibalas, Student saat ada materi baru.
 - Ganti password memakai Better Auth (`changePassword`) dan mengeluarkan sesi di perangkat lain.
 - Admin dapat membuka ruang belajar dalam **mode pratinjau** (tanpa tombol Tandai selesai).
+- **Student yang menjadi Teacher** tetap bisa mengakses kelas yang sudah diikutinya: menu **Kelas Saya** dan **Sertifikat** muncul di sidebar Teacher jika ia punya riwayat belajar. Ia bisa melanjutkan belajar, berdiskusi, dan mengunduh sertifikat, tetapi **tidak bisa mengikuti course baru** (enroll tetap khusus Student, dicek di server).
 
-## Fitur Sertifikat 
+## Fitur Sertifikat
 
 | Halaman | Fitur |
 |---|---|
@@ -195,6 +220,7 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 - Nama student, judul course, dan nama instruktur disimpan sebagai **snapshot**, sehingga sertifikat tetap sah walau data aslinya berubah. Sertifikat yang sudah terbit tidak hilang walau tanda selesai dibatalkan.
 - Unduh PDF memakai **CSS print** (`@page A4 landscape`), sehingga hanya sertifikat yang tercetak tanpa library PDF tambahan.
 - Student hanya bisa membuka sertifikat miliknya (sertifikat orang lain -> 404). Halaman verifikasi publik hanya menampilkan data yang tercetak di sertifikat.
+
 
 ## Menjalankan Aplikasi
 
