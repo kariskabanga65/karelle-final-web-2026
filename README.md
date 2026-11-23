@@ -12,7 +12,7 @@ Kelas yang tersedia: **Runway Modeling**, **Posing & Photoshoot**, **Model Portf
 
 | Bagian | Teknologi |
 |---|---|
-| Frontend | Next.js 16 (App Router, JSX), Tailwind CSS 4, shadcn/ui, Lucide React, Tiptap (Rich Text Editor) |
+| Frontend | Next.js 16 (App Router, JSX), Tailwind CSS 4, shadcn/ui, Lucide React, Tiptap (Rich Text Editor), qrcode (QR sertifikat) |
 | Backend | Route Handlers, Server Components, Server Actions, Zod (validasi), sanitize-html (anti-XSS) |
 | Database | PostgreSQL + Raw SQL (`pg`), tanpa ORM |
 | Auth | Better Auth, bcryptjs, `src/middleware.js`, RBAC |
@@ -145,7 +145,7 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 
 **Forgot Password:** proyek ini belum memakai layanan email, jadi tautan reset password ditampilkan di **terminal** tempat `npm run dev` berjalan. Salin tautan tersebut ke browser.
 
-## Fitur Teacher 
+## Fitur Teacher
 
 | Halaman | Fitur |
 |---|---|
@@ -178,6 +178,23 @@ Isi `DATABASE_URL` dengan username dan password PostgreSQL Anda, misalnya `postg
 - Notifikasi otomatis: Teacher saat ada pertanyaan baru, penulis komentar saat dibalas, Student saat ada materi baru.
 - Ganti password memakai Better Auth (`changePassword`) dan mengeluarkan sesi di perangkat lain.
 - Admin dapat membuka ruang belajar dalam **mode pratinjau** (tanpa tombol Tandai selesai).
+
+## Fitur Sertifikat 
+
+| Halaman | Fitur |
+|---|---|
+| `/student/certificates` | Sertifikat Saya: semua sertifikat milik student, plus tombol **Terbitkan** untuk course 100% yang belum punya sertifikat |
+| `/student/certificates/[id]` | Tampilan sertifikat A4 landscape dengan QR code, tombol **Cetak / Simpan PDF** dan salin link verifikasi |
+| `/certificates/verify` | Verifikasi publik: masukkan nomor sertifikat (tanpa login) |
+| `/certificates/verify/[number]` | Hasil verifikasi (tujuan QR code di sertifikat) |
+| `/admin/certificates` | Admin melihat & mencari semua sertifikat |
+
+- Sertifikat **terbit otomatis** saat student menandai materi terakhir hingga progress 100%, lalu student mendapat notifikasi.
+- **Trigger PostgreSQL** `certificates_check_eligibility` menolak sertifikat jika progress belum 100%, dan constraint `UNIQUE (student_id, course_id)` mencegah sertifikat ganda.
+- Nomor sertifikat dibuat database (`generate_certificate_number()`), format `KRL-2026-XXXXXXXXXX`.
+- Nama student, judul course, dan nama instruktur disimpan sebagai **snapshot**, sehingga sertifikat tetap sah walau data aslinya berubah. Sertifikat yang sudah terbit tidak hilang walau tanda selesai dibatalkan.
+- Unduh PDF memakai **CSS print** (`@page A4 landscape`), sehingga hanya sertifikat yang tercetak tanpa library PDF tambahan.
+- Student hanya bisa membuka sertifikat miliknya (sertifikat orang lain -> 404). Halaman verifikasi publik hanya menampilkan data yang tercetak di sertifikat.
 
 ## Menjalankan Aplikasi
 
