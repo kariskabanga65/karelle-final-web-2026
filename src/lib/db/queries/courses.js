@@ -52,13 +52,22 @@ export async function getCourseOutline(courseId) {
   );
 }
 
-/** Kelas untuk section "Modeling Programs", diurutkan sesuai urutan kategori. */
+/**
+ * Kelas untuk section "Modeling Programs": satu course per kategori
+ * (course pertama yang dibuat), diurutkan sesuai urutan kategori.
+ */
 export async function getProgramCourses(limit = 4) {
   return queryMany(
-    `SELECT ${prefixed("v")}
-       FROM v_course_catalog v
-       JOIN categories cat ON cat.id = v.category_id
-      ORDER BY cat.created_at, v.created_at
+    `SELECT ${CATALOG_COLUMNS}
+       FROM (
+         -- Satu course per kategori: course PERTAMA di kategori itu.
+         -- Course baru tidak menggeser program utama di homepage.
+         SELECT DISTINCT ON (v.category_id) ${prefixed("v")}, cat.created_at AS category_created_at
+           FROM v_course_catalog v
+           JOIN categories cat ON cat.id = v.category_id
+          ORDER BY v.category_id, v.created_at, v.id
+       ) program
+      ORDER BY category_created_at
       LIMIT $1`,
     [limit],
   );
