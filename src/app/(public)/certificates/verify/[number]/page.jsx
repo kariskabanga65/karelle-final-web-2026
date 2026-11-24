@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { BadgeCheck, ShieldX } from "lucide-react";
 import { VerifyForm } from "@/components/certificates/verify-form";
+import { BackLink } from "@/components/shared/back-link";
 import { CERTIFICATE_NUMBER_PATTERN, getCertificateByNumber } from "@/lib/db/queries/certificates";
 import { formatDate } from "@/lib/utils/format";
 
@@ -44,7 +44,7 @@ export default async function VerifyResultPage({ params }) {
           <p className="text-sm text-white/60">Verifikasi nomor lain:</p>
           <VerifyForm dark />
         </div>
-        <Link href="/" className="text-center text-sm text-white/60 underline-offset-4 hover:text-white hover:underline">Kembali ke beranda</Link>
+        <BackLink className="mx-auto text-center text-sm text-white/60 underline-offset-4 hover:text-white hover:underline" />
       </div>
     </section>
   );

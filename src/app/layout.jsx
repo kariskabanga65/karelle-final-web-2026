@@ -2,6 +2,7 @@ import "@fontsource-variable/bodoni-moda";
 import "@fontsource-variable/bodoni-moda/wght-italic.css";
 import "@fontsource-variable/jost";
 import "./globals.css";
+import { NavigationTracker } from "@/components/shared/navigation-tracker";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
         </a>
         {children}
         <Toaster />
+        <NavigationTracker />
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Award, ExternalLink, Eye, Search } from "lucide-react";
+import { Award, BadgeCheck, Eye, Search } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Pagination } from "@/components/shared/pagination";
@@ -55,7 +55,7 @@ export default async function AdminCertificatesPage({ searchParams }) {
                     <TableCell>
                       <div className="flex justify-end gap-1">
                         <Button asChild variant="ghost" size="sm"><Link href={`/student/certificates/${row.id}`}><Eye /> Lihat</Link></Button>
-                        <Button asChild variant="ghost" size="sm"><Link href={`/certificates/verify/${row.certificate_number}`} target="_blank"><ExternalLink /> Verifikasi</Link></Button>
+                        <Button asChild variant="ghost" size="sm"><Link href={`/certificates/verify/${row.certificate_number}`}><BadgeCheck /> Verifikasi</Link></Button>
                       </div>
                     </TableCell>
                   </TableRow>
