@@ -9,15 +9,10 @@ import { countUnreadNotifications } from "@/lib/db/queries/notifications";
 import { MobileSidebar } from "./mobile-sidebar";
 import { SidebarNav } from "./sidebar-nav";
 
-/**
- * Kerangka halaman dashboard: sidebar gelap di kiri (desktop),
- * menu geser untuk mobile, dan header dengan menu akun.
- */
+
 export async function DashboardShell({ user, badges = {}, children }) {
   const roleLabel = ROLE_LABELS[user.role];
-  // Jumlah notifikasi belum dibaca untuk badge di menu "Notifikasi".
   const allBadges = { ...badges, unreadNotifications: await countUnreadNotifications(user.id) };
-  // Teacher yang pernah mengikuti kelas tetap mendapat menu Kelas Saya & Sertifikat.
   const showLearning = user.role === ROLES.TEACHER && (await countEnrollments(user.id)) > 0;
   const safeUser = { name: user.name, email: user.email, image: user.image ?? null };
 

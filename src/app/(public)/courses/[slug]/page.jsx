@@ -1,10 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BookOpen, CalendarDays, Lock, Users } from "lucide-react";
+import { BookOpen, CalendarDays, Lock, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CourseActions } from "@/components/course/course-actions";
 import { TeacherCard } from "@/components/course/teacher-card";
+import { BackLink } from "@/components/shared/back-link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCourseBySlug, getCourseOutline } from "@/lib/db/queries/courses";
 import { getEnrollmentMap } from "@/lib/db/queries/enrollments";
@@ -36,9 +36,13 @@ export default async function CourseDetailPage({ params }) {
       <section className="relative overflow-hidden bg-ink text-white">
         <Image src={course.thumbnail_url || getCategoryImage(course.category_slug)} alt="" fill priority sizes="100vw" className="object-cover object-top opacity-25" />
         <div className="relative mx-auto flex max-w-7xl flex-col items-start gap-6 px-5 py-16 sm:px-8 lg:py-24">
-          <Link href="/courses" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
-            <ArrowLeft className="size-4" /> Kembali ke katalog
-          </Link>
+          <BackLink
+            fallbackHref="/courses"
+            fallbackLabel="Kembali ke katalog"
+            backLabel="Kembali"
+            showIcon
+            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
+          />
           <Badge className="bg-white text-ink">{course.category_name}</Badge>
           <h1 className="display-title max-w-4xl text-5xl sm:text-6xl">{course.title}</h1>
           <p className="max-w-2xl text-lg text-white/70">{course.description}</p>

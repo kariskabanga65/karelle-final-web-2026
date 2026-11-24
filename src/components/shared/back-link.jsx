@@ -7,15 +7,8 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HAS_PREVIOUS_PAGE_KEY } from "@/components/shared/navigation-tracker";
 
-/**
- * true jika di tab ini user sudah berpindah halaman di dalam KARÉLLE,
- * sehingga "kembali" tetap berada di aplikasi. Tab baru, scan QR, atau
- * URL yang diketik langsung menghasilkan false.
- */
 function useCanGoBack() {
   const [canGoBack, setCanGoBack] = useState(false);
-
-  // sessionStorage dan riwayat browser hanya bisa dibaca di browser.
   useEffect(() => {
     let visitedBefore = false;
     try {
@@ -29,14 +22,21 @@ function useCanGoBack() {
   return canGoBack;
 }
 
-/** Link teks "kembali"; jika tidak ada halaman sebelumnya, menuju halaman cadangan. */
-export function BackLink({ fallbackHref = "/", fallbackLabel = "Kembali ke beranda", className }) {
+export function BackLink({
+  fallbackHref = "/",
+  fallbackLabel = "Kembali ke beranda",
+  backLabel = "Kembali ke halaman sebelumnya",
+  showIcon = false,
+  className,
+}) {
   const router = useRouter();
   const canGoBack = useCanGoBack();
+  const icon = showIcon ? <ArrowLeft className="size-4" aria-hidden /> : null;
 
   if (!canGoBack) {
     return (
       <Link href={fallbackHref} className={className}>
+        {icon}
         {fallbackLabel}
       </Link>
     );
@@ -44,12 +44,12 @@ export function BackLink({ fallbackHref = "/", fallbackLabel = "Kembali ke beran
 
   return (
     <button type="button" onClick={() => router.back()} className={className}>
-      Kembali ke halaman sebelumnya
+      {icon}
+      {backLabel}
     </button>
   );
 }
 
-/** Tombol panah kembali untuk header dashboard; tidak tampil jika tidak ada halaman sebelumnya. */
 export function BackButton({ className }) {
   const router = useRouter();
   const canGoBack = useCanGoBack();
