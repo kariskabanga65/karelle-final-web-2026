@@ -120,27 +120,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* CALL TO ACTION */}
-      <section aria-labelledby="cta-title" className="relative overflow-hidden bg-ink text-white">
-        <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-7 px-5 py-24 text-center sm:px-8">
-          <p className="eyebrow text-white/80">Start Today</p>
-          <h2 id="cta-title" className="display-title text-5xl sm:text-6xl">
-            Ready for your <em className="italic">first walk?</em>
-          </h2>
-          <p className="max-w-xl text-white/70">
-            Daftar gratis sebagai Student untuk mulai belajar, atau ajukan diri sebagai Teacher untuk berbagi keahlian Anda.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button asChild variant="light" size="lg" className="rounded-sm">
-              <Link href="/register/student">Daftar sebagai Student</Link>
-            </Button>
-            <Button asChild variant="outline-light" size="lg" className="rounded-sm">
-              <Link href="/register/teacher">Daftar sebagai Teacher</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
     </>
   );
 }
