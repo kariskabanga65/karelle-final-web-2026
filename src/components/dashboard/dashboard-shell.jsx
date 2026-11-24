@@ -2,16 +2,22 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { UserMenu } from "@/components/layout/user-menu";
+import { BackButton } from "@/components/shared/back-link";
 import { getDashboardPath, ROLE_LABELS, ROLES } from "@/lib/auth/roles";
 import { countEnrollments } from "@/lib/db/queries/enrollments";
 import { countUnreadNotifications } from "@/lib/db/queries/notifications";
 import { MobileSidebar } from "./mobile-sidebar";
 import { SidebarNav } from "./sidebar-nav";
 
-
+/**
+ * Kerangka halaman dashboard: sidebar gelap di kiri (desktop),
+ * menu geser untuk mobile, dan header dengan menu akun.
+ */
 export async function DashboardShell({ user, badges = {}, children }) {
   const roleLabel = ROLE_LABELS[user.role];
+  // Jumlah notifikasi belum dibaca untuk badge di menu "Notifikasi".
   const allBadges = { ...badges, unreadNotifications: await countUnreadNotifications(user.id) };
+  // Teacher yang pernah mengikuti kelas tetap mendapat menu Kelas Saya & Sertifikat.
   const showLearning = user.role === ROLES.TEACHER && (await countEnrollments(user.id)) > 0;
   const safeUser = { name: user.name, email: user.email, image: user.image ?? null };
 
@@ -32,6 +38,7 @@ export async function DashboardShell({ user, badges = {}, children }) {
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/90 px-4 backdrop-blur sm:px-8">
           <div className="flex items-center gap-2">
             <MobileSidebar role={user.role} roleLabel={roleLabel} badges={allBadges} showLearning={showLearning} />
+            <BackButton />
             <span className="font-display text-xl lg:hidden">KARÉLLE</span>
           </div>
           <div className="rounded-full bg-ink">
