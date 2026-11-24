@@ -1,7 +1,3 @@
-// Membuat hash bcrypt dari sebuah password.
-// Dipakai untuk menyiapkan password akun dummy di database/seed.sql.
-//
-// Cara pakai:  npm run hash-password -- "PasswordAnda123!"
 import bcrypt from "bcryptjs";
 
 const SALT_ROUNDS = 10;
