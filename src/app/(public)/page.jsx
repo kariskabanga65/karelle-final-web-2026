@@ -6,12 +6,7 @@ import { CategoryCard } from "@/components/course/category-card";
 import { TeacherCard } from "@/components/course/teacher-card";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { BenefitStrip } from "@/components/home/benefit-strip";
-import { PopularCourseList } from "@/components/home/popular-course-list";
-import { CourseFilters } from "@/components/shared/course-filters";
-import { EmptyState } from "@/components/shared/empty-state";
-import { getCurrentUser } from "@/lib/auth/session";
-import { getCategoriesWithCourseCount, getPlatformStats, getPopularCourses, getProgramCourses } from "@/lib/db/queries/courses";
-import { getEnrollmentMap } from "@/lib/db/queries/enrollments";
+import { getPlatformStats, getProgramCourses } from "@/lib/db/queries/courses";
 import { getTeachers } from "@/lib/db/queries/teachers";
 
 export const metadata = {
@@ -26,14 +21,10 @@ const GALLERY = [
 ];
 
 export default async function HomePage() {
-  const user = await getCurrentUser();
-  const [programs, categories, popularCourses, teachers, stats, enrollments] = await Promise.all([
+  const [programs, teachers, stats] = await Promise.all([
     getProgramCourses(4),
-    getCategoriesWithCourseCount(),
-    getPopularCourses(5),
     getTeachers({ limit: 3 }),
     getPlatformStats(),
-    getEnrollmentMap(user && user.role !== "admin" ? user.id : null),
   ]);
 
   return (
@@ -59,26 +50,6 @@ export default async function HomePage() {
           {programs.map((course) => (
             <CategoryCard key={course.id} course={course} />
           ))}
-        </div>
-      </section>
-
-      {/* COURSE TERPOPULER (maksimal 5) + search & filter kategori */}
-      <section aria-labelledby="popular-title" className="border-t bg-card">
-        <div className="mx-auto max-w-7xl space-y-10 px-5 py-20 sm:px-8">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
-            <div className="space-y-5">
-              <p className="eyebrow">Most Popular</p>
-              <h2 id="popular-title" className="display-title text-5xl sm:text-6xl">
-                Popular <em className="italic">Classes</em>
-              </h2>
-            </div>
-            <CourseFilters categories={categories} />
-          </div>
-          {popularCourses.length > 0 ? (
-            <PopularCourseList courses={popularCourses} enrollments={enrollments} />
-          ) : (
-            <EmptyState title="Belum ada course" description="Course yang dibuat Teacher akan tampil di sini." />
-          )}
         </div>
       </section>
 
