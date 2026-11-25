@@ -7,6 +7,7 @@ import { authorizeAction } from "@/lib/auth/action-guard";
 import { ROLES } from "@/lib/auth/roles";
 import { query, queryOne, withTransaction } from "@/lib/db";
 import { getDbErrorMessage } from "@/lib/db/errors";
+import { logActivity } from "@/lib/activity-log";
 import { actionError, actionSuccess, formDataToObject, validationError } from "@/lib/utils/action-result";
 import { createUserSchema, teacherApplicationSchema, updateUserSchema } from "@/lib/validations/user";
 
@@ -64,6 +65,14 @@ export async function createUserAction(_prevState, formData) {
     return actionError(getDbErrorMessage(err, "Gagal membuat user."), {}, input);
   }
 
+  await logActivity({
+    actor: admin,
+    action: "create",
+    entityType: "user",
+    entityId: createdUserId,
+    entityLabel: `${name} (@${username})`,
+    details: { email, role, ...(role === ROLES.TEACHER ? { bidang_keahlian: expertise } : {}) },
+  });
   revalidatePath("/admin/users");
   redirect("/admin/users?success=created");
 }
@@ -77,7 +86,7 @@ export async function updateUserAction(userId, _prevState, formData) {
   if (!parsed.success) return validationError(parsed.error, input);
   const { name, username, email, password } = parsed.data;
 
-  const target = await queryOne(`SELECT id, role FROM users WHERE id = $1`, [userId]);
+  const target = await queryOne(`SELECT id, role, name, username, email FROM users WHERE id = $1`, [userId]);
   if (!target) return actionError("User tidak ditemukan.", {}, input);
 
   // Role akun Admin tidak diubah lewat form, dan user yang sudah ada tidak bisa
@@ -162,6 +171,28 @@ export async function updateUserAction(userId, _prevState, formData) {
     return actionError(getDbErrorMessage(err, "Gagal menyimpan perubahan."), {}, input);
   }
 
+  const changes = {};
+  if (target.name !== name) changes.name = { dari: target.name, menjadi: name };
+  if (target.username !== username) changes.username = { dari: target.username, menjadi: username };
+  if (target.email !== email) changes.email = { dari: target.email, menjadi: email };
+  if (password) changes.password = "diganti";
+  if (Object.keys(changes).length > 0) {
+    await logActivity({ actor: admin, action: "update", entityType: "user", entityId: userId, entityLabel: `${name} (@${username})`, details: changes });
+  }
+  if (target.role !== role) {
+    await logActivity({
+      actor: admin,
+      action: "role_change",
+      entityType: "user",
+      entityId: userId,
+      entityLabel: `${name} (@${username})`,
+      details: {
+        role: { dari: target.role, menjadi: role },
+        ...(becomesTeacher ? { bidang_keahlian: teacherData.expertise } : {}),
+        ...(becomesStudent ? { catatan: "Data bidang keahlian, pengalaman, dan motivasi dihapus." } : {}),
+      },
+    });
+  }
   revalidatePath("/admin/users");
   redirect("/admin/users?success=updated");
 }
@@ -172,8 +203,20 @@ export async function deleteUserAction(userId) {
   if (userId === admin.id) return actionError("Anda tidak dapat menghapus akun Anda sendiri.");
 
   try {
-    const result = await query(`DELETE FROM users WHERE id = $1 RETURNING name`, [userId]);
+    const result = await query(
+      `DELETE FROM users WHERE id = $1 RETURNING name, username, email, role, created_at`,
+      [userId],
+    );
     if (result.rowCount === 0) return actionError("User tidak ditemukan.");
+    const deleted = result.rows[0];
+    await logActivity({
+      actor: admin,
+      action: "delete",
+      entityType: "user",
+      entityId: userId,
+      entityLabel: `${deleted.name} (@${deleted.username})`,
+      details: { email: deleted.email, role: deleted.role, terdaftar: deleted.created_at },
+    });
     revalidatePath("/admin/users");
     revalidatePath("/admin");
     return actionSuccess(`User ${result.rows[0].name} berhasil dihapus.`);

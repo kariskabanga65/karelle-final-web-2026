@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Award,
+  History,
   Bell,
   BookOpen,
   FolderTree,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
+/** Menu sidebar untuk setiap role. */
 const NAV_ITEMS = {
   admin: [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -24,6 +26,7 @@ const NAV_ITEMS = {
     { href: "/admin/courses", label: "Courses", icon: BookOpen },
     { href: "/admin/categories", label: "Kategori", icon: FolderTree },
     { href: "/admin/certificates", label: "Sertifikat", icon: Award },
+    { href: "/admin/activity-logs", label: "Riwayat Aktivitas", icon: History },
   ],
   teacher: [
     { href: "/teacher", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -37,6 +40,7 @@ const NAV_ITEMS = {
   ],
 };
 
+/** Menu belajar untuk Teacher yang dulunya Student (punya riwayat kelas). */
 const TEACHER_LEARNING_ITEMS = [
   { href: "/student/courses", label: "Kelas Saya", icon: Library },
   { href: "/student/certificates", label: "Sertifikat", icon: Award },

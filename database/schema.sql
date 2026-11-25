@@ -21,6 +21,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- 0. Bersihkan objek lama (agar file aman dijalankan ulang)
 -- -------------------------------------------------------------
 DROP VIEW  IF EXISTS v_course_catalog CASCADE;
+DROP TABLE IF EXISTS activity_logs        CASCADE;
 DROP TABLE IF EXISTS notifications        CASCADE;
 DROP TABLE IF EXISTS certificates         CASCADE;
 DROP TABLE IF EXISTS comments             CASCADE;
@@ -454,6 +455,31 @@ FOR EACH ROW EXECUTE FUNCTION trg_check_certificate_eligibility();
 -- =============================================================
 -- 10. VIEW: ringkasan course untuk homepage & katalog
 -- =============================================================
+
+-- =============================================================
+-- RIWAYAT AKTIVITAS (log kegiatan Admin & Teacher)
+-- Data yang dihapus tetap bisa dicek lewat salinan di kolom details.
+-- actor_name & entity_label disimpan sebagai salinan (snapshot), sehingga
+-- log tetap terbaca walaupun user atau datanya sudah dihapus.
+-- =============================================================
+CREATE TABLE activity_logs (
+    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    actor_id      TEXT        REFERENCES users (id) ON DELETE SET NULL,
+    actor_name    TEXT        NOT NULL,
+    actor_role    TEXT        NOT NULL,
+    action        TEXT        NOT NULL,   -- create | update | delete | approve | reject | role_change
+    entity_type   TEXT        NOT NULL,   -- user | course | category | teacher_application
+    entity_id     TEXT,
+    entity_label  TEXT        NOT NULL,
+    details       JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT activity_logs_action_check
+        CHECK (action IN ('create', 'update', 'delete', 'approve', 'reject', 'role_change')),
+    CONSTRAINT activity_logs_entity_check
+        CHECK (entity_type IN ('user', 'course', 'category', 'teacher_application'))
+);
+CREATE INDEX activity_logs_created_idx ON activity_logs (created_at DESC);
 
 CREATE VIEW v_course_catalog AS
 SELECT

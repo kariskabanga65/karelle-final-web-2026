@@ -5,15 +5,22 @@ import { redirect } from "next/navigation";
 import { authorizeAction } from "@/lib/auth/action-guard";
 import { ROLES } from "@/lib/auth/roles";
 import { query, queryOne } from "@/lib/db";
+import { logActivity } from "@/lib/activity-log";
 import { getDbErrorMessage } from "@/lib/db/errors";
 import { actionError, actionSuccess, formDataToObject, validationError } from "@/lib/utils/action-result";
 import { removeUpload } from "@/lib/uploads";
 import { isUuid, slugify } from "@/lib/utils/slug";
 import { courseSchema } from "@/lib/validations/course";
 
+/**
+ * Course Management untuk Admin DAN Teacher.
+ * - Admin   : mengelola semua course dan memilih Teacher-nya.
+ * - Teacher : teacher_id otomatis akun yang login; hanya bisa mengubah
+ *             dan menghapus course miliknya (dicek di query SQL).
+ */
 
 export async function createCourseAction(_prevState, formData) {
-  const { user, error } = await authorizeAction([ROLES.TEACHER]); 
+  const { user, error } = await authorizeAction([ROLES.TEACHER]); // Admin otomatis lolos
   if (error) return error;
 
   const input = formDataToObject(formData);
@@ -25,11 +32,18 @@ export async function createCourseAction(_prevState, formData) {
 
   const { title, description, categoryId, startDate, endDate, thumbnailUrl } = parsed.data;
   try {
-    await query(
+    const created = await query(
       `INSERT INTO courses (title, slug, description, category_id, teacher_id, start_date, end_date, thumbnail_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id,
+                 (SELECT name FROM categories WHERE id = $4) AS category,
+                 (SELECT name FROM users WHERE id = $5) AS teacher`,
       [title, await uniqueSlug(title), description, categoryId, teacher.id, startDate, endDate, thumbnailUrl],
     );
+    await logActivity({
+      actor: user, action: "create", entityType: "course", entityId: created.rows[0].id, entityLabel: title,
+      details: { kategori: created.rows[0].category, teacher: created.rows[0].teacher },
+    });
   } catch (err) {
     return actionError(getDbErrorMessage(err, "Gagal membuat course."), {}, input);
   }
@@ -69,7 +83,17 @@ export async function updateCourseAction(courseId, _prevState, formData) {
   } catch (err) {
     return actionError(getDbErrorMessage(err, "Gagal menyimpan course."), {}, input);
   }
+  // Thumbnail lama dihapus dari penyimpanan jika diganti/dihapus.
   if (course.thumbnail_url && course.thumbnail_url !== thumbnailUrl) await removeUpload(course.thumbnail_url);
+
+  const changes = {};
+  if (course.title !== title) changes.judul = { dari: course.title, menjadi: title };
+  if (course.teacher_id !== teacher.id) {
+    const names = await query(`SELECT id, name FROM users WHERE id = ANY($1::text[])`, [[course.teacher_id, teacher.id]]);
+    const nameOf = (id) => names.rows.find((row) => row.id === id)?.name ?? id;
+    changes.teacher = { dari: nameOf(course.teacher_id), menjadi: nameOf(teacher.id) };
+  }
+  await logActivity({ actor: user, action: "update", entityType: "course", entityId: courseId, entityLabel: title, details: changes });
 
   revalidateCourses();
   redirect(`${basePath(user)}/courses?success=updated`);
@@ -81,6 +105,21 @@ export async function deleteCourseAction(courseId) {
   if (!isUuid(courseId)) return actionError("Course tidak valid.");
 
   try {
+    // Teacher hanya bisa menghapus course miliknya sendiri.
+    // Salinan isi course disimpan ke Riwayat Aktivitas sebelum dihapus (cascade),
+    // agar tetap bisa dicek walaupun datanya tidak bisa dipulihkan.
+    const snapshot = await queryOne(
+      `SELECT c.title, c.description, cat.name AS category, u.name AS teacher,
+              (SELECT COUNT(*)::int FROM course_contents cc WHERE cc.course_id = c.id) AS lessons,
+              (SELECT COUNT(*)::int FROM enrollments e WHERE e.course_id = c.id) AS students,
+              (SELECT COALESCE(json_agg(cc.title ORDER BY cc.order_index), '[]'::json)
+                 FROM course_contents cc WHERE cc.course_id = c.id) AS lesson_titles
+         FROM courses c
+         JOIN categories cat ON cat.id = c.category_id
+         JOIN users u ON u.id = c.teacher_id
+        WHERE c.id = $1 AND ($2::text IS NULL OR c.teacher_id = $2)`,
+      [courseId, ownerFilter(user)],
+    );
     const result = await query(
       `DELETE FROM courses
         WHERE id = $1 AND ($2::text IS NULL OR teacher_id = $2)
@@ -88,6 +127,19 @@ export async function deleteCourseAction(courseId) {
       [courseId, ownerFilter(user)],
     );
     if (result.rowCount === 0) return actionError("Course tidak ditemukan atau bukan milik Anda.");
+    await logActivity({
+      actor: user, action: "delete", entityType: "course", entityId: courseId, entityLabel: result.rows[0].title,
+      details: snapshot
+        ? {
+            kategori: snapshot.category,
+            teacher: snapshot.teacher,
+            deskripsi: snapshot.description,
+            jumlah_materi: snapshot.lessons,
+            jumlah_student: snapshot.students,
+            daftar_materi: snapshot.lesson_titles,
+          }
+        : {},
+    });
     await removeUpload(result.rows[0].thumbnail_url);
     revalidateCourses();
     return actionSuccess(`Course "${result.rows[0].title}" dihapus.`);
@@ -96,11 +148,13 @@ export async function deleteCourseAction(courseId) {
   }
 }
 
+// ---------------------------------------------------------------
 const isAdmin = (user) => user.role === ROLES.ADMIN;
 const basePath = (user) => (isAdmin(user) ? "/admin" : "/teacher");
 const ownerFilter = (user) => (isAdmin(user) ? null : user.id);
 const canManage = (user, course) => isAdmin(user) || course.teacher_id === user.id;
 
+/** Admin memilih Teacher dari form; Teacher selalu dirinya sendiri. */
 async function resolveTeacher(user, requestedTeacherId, input) {
   if (!isAdmin(user)) return { id: user.id };
   const teacher = requestedTeacherId
@@ -112,6 +166,7 @@ async function resolveTeacher(user, requestedTeacherId, input) {
   return { id: teacher.id };
 }
 
+/** Slug unik: "judul", lalu "judul-2", "judul-3", dst. */
 async function uniqueSlug(title, excludeId = null) {
   const base = slugify(title);
   let slug = base;

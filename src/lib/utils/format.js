@@ -59,3 +59,18 @@ export function formatRelative(value) {
   }
   return "baru saja";
 }
+
+const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Makassar",
+});
+
+/** Tanggal + jam (WITA), contoh: "25 Nov 2026, 22.30". */
+export function formatDateTime(value) {
+  if (!value) return "-";
+  return dateTimeFormatter.format(new Date(value));
+}
