@@ -8,8 +8,8 @@ import { FormField, FormMessage, SubmitButton } from "./form-field";
 
 /**
  * Form Create/Edit User (Admin).
- * - Role yang bisa dipilih hanya Student dan Teacher. Akun Admin disediakan
- *   langsung oleh sistem, jadi role Admin hanya ditampilkan (tidak bisa diubah).
+ * - Tambah User: role Student, Teacher, atau Admin.
+ * - Edit User: role hanya Student <-> Teacher; role akun Admin hanya ditampilkan.
  * - Menjadi Teacher (user baru, atau Student yang diubah) memunculkan field yang
  *   sama dengan form register Teacher: bidang keahlian, pengalaman, motivasi.
  * - Teacher yang diubah menjadi Student: data tersebut akan dihapus.
@@ -45,7 +45,7 @@ export function UserForm({ action, user = null, categories = [], application = n
           <div className="space-y-2">
             <p className="text-sm font-medium">Role</p>
             <p className="flex h-11 items-center rounded-md border border-input bg-muted/40 px-3.5 text-[0.95rem]">Admin</p>
-            <p className="text-xs text-muted-foreground">Akun Admin disediakan langsung oleh sistem, role-nya tidak dapat diubah.</p>
+            <p className="text-xs text-muted-foreground">Role akun Admin tidak dapat diubah.</p>
           </div>
         ) : (
           <FormField
@@ -64,6 +64,7 @@ export function UserForm({ action, user = null, categories = [], application = n
             >
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
+              {!isEdit && <option value="admin">Admin</option>}
             </NativeSelect>
           </FormField>
         )}

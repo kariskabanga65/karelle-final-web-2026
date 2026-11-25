@@ -80,8 +80,8 @@ export async function updateUserAction(userId, _prevState, formData) {
   const target = await queryOne(`SELECT id, role FROM users WHERE id = $1`, [userId]);
   if (!target) return actionError("User tidak ditemukan.", {}, input);
 
-  // Akun Admin disediakan langsung oleh sistem: role-nya tidak diubah lewat form,
-  // dan user lain tidak bisa diubah menjadi Admin (ROLE_VALUES hanya student/teacher).
+  // Role akun Admin tidak diubah lewat form, dan user yang sudah ada tidak bisa
+  // diubah menjadi Admin (EDIT_ROLE_VALUES hanya student/teacher).
   const isAdminAccount = target.role === ROLES.ADMIN;
   const role = isAdminAccount ? ROLES.ADMIN : parsed.data.role;
   if (!role) return actionError("Periksa kembali data yang Anda isi.", { role: ["Role wajib dipilih."] }, input);

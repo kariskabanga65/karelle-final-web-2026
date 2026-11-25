@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { teacherApplicationFields } from "./auth";
 
+/** Role saat Tambah User: Admin boleh membuat akun Admin baru. */
+const CREATE_ROLE_VALUES = ["student", "teacher", "admin"];
+
 /**
- * Role yang bisa dipilih Admin di form user. Akun Admin tidak dibuat atau
- * diberikan lewat form: Admin disediakan langsung oleh sistem (seed).
+ * Role saat Edit User: hanya Student <-> Teacher. User yang sudah ada tidak
+ * diubah menjadi Admin, dan role akun Admin tidak diubah lewat form.
  */
-const ROLE_VALUES = ["student", "teacher"];
+const EDIT_ROLE_VALUES = ["student", "teacher"];
 
 const baseUser = {
   name: z.string().trim().min(3, { error: "Nama minimal 3 karakter." }).max(80, { error: "Nama maksimal 80 karakter." }),
@@ -34,7 +37,7 @@ const teacherFieldsSchema = z.object(teacherApplicationFields);
 export const createUserSchema = z
   .object({
     ...baseUser,
-    role: z.enum(ROLE_VALUES, { error: "Role tidak valid." }),
+    role: z.enum(CREATE_ROLE_VALUES, { error: "Role tidak valid." }),
     password: strongPassword,
     confirmPassword: z.string(),
     expertise: z.string().optional(),
@@ -66,7 +69,7 @@ export const createUserSchema = z
  */
 export const updateUserSchema = z.object({
   ...baseUser,
-  role: z.enum(ROLE_VALUES, { error: "Role tidak valid." }).optional(),
+  role: z.enum(EDIT_ROLE_VALUES, { error: "Role tidak valid." }).optional(),
   password: z.union([z.literal(""), strongPassword]).optional(),
   expertise: z.string().optional(),
   experience: z.string().optional(),
