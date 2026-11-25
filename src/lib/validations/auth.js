@@ -66,24 +66,27 @@ const passwordsMatchError = {
 
 export const registerStudentSchema = registerBase.refine(passwordsMatch, passwordsMatchError);
 
+/** Field pengajuan Teacher. Dipakai form register Teacher dan form Tambah User (Admin). */
+export const teacherApplicationFields = {
+  expertise: z
+    .string({ error: "Bidang keahlian wajib dipilih." })
+    .trim()
+    .min(3, { error: "Bidang keahlian wajib dipilih." })
+    .max(80),
+  experience: z
+    .string()
+    .trim()
+    .min(20, { error: "Ceritakan pengalaman Anda minimal 20 karakter." })
+    .max(1000, { error: "Pengalaman maksimal 1000 karakter." }),
+  motivation: z
+    .string()
+    .trim()
+    .min(20, { error: "Motivasi minimal 20 karakter." })
+    .max(1000, { error: "Motivasi maksimal 1000 karakter." }),
+};
+
 export const registerTeacherSchema = registerBase
-  .extend({
-    expertise: z
-      .string({ error: "Bidang keahlian wajib dipilih." })
-      .trim()
-      .min(3, { error: "Bidang keahlian wajib dipilih." })
-      .max(80),
-    experience: z
-      .string()
-      .trim()
-      .min(20, { error: "Ceritakan pengalaman Anda minimal 20 karakter." })
-      .max(1000, { error: "Pengalaman maksimal 1000 karakter." }),
-    motivation: z
-      .string()
-      .trim()
-      .min(20, { error: "Motivasi minimal 20 karakter." })
-      .max(1000, { error: "Motivasi maksimal 1000 karakter." }),
-  })
+  .extend(teacherApplicationFields)
   .refine(passwordsMatch, passwordsMatchError);
 
 export const forgotPasswordSchema = z.object({ email: emailField });

@@ -8,17 +8,28 @@ import { ROLES } from "@/lib/auth/roles";
 import { query, queryOne, withTransaction } from "@/lib/db";
 import { getDbErrorMessage } from "@/lib/db/errors";
 import { actionError, actionSuccess, formDataToObject, validationError } from "@/lib/utils/action-result";
-import { createUserSchema, updateUserSchema } from "@/lib/validations/user";
+import { createUserSchema, teacherApplicationSchema, updateUserSchema } from "@/lib/validations/user";
 
+/**
+ * User Management (khusus Admin).
+ * Akun dibuat lewat Better Auth (internalAdapter), sehingga password
+ * di-hash dengan fungsi bcrypt yang sama seperti saat register.
+ */
 
 export async function createUserAction(_prevState, formData) {
-  const { error } = await authorizeAction([ROLES.ADMIN]);
+  const { user: admin, error } = await authorizeAction([ROLES.ADMIN]);
   if (error) return error;
 
   const input = formDataToObject(formData);
   const parsed = createUserSchema.safeParse(input);
   if (!parsed.success) return validationError(parsed.error, input);
-  const { name, username, email, password, role } = parsed.data;
+  const { name, username, email, password, role, expertise, experience, motivation } = parsed.data;
+
+  // Bidang keahlian harus salah satu kategori yang dikelola Admin.
+  if (role === ROLES.TEACHER) {
+    const category = await queryOne(`SELECT 1 AS ok FROM categories WHERE name = $1`, [expertise]);
+    if (!category) return actionError("Periksa kembali isian Anda.", { expertise: ["Bidang keahlian tidak valid."] }, input);
+  }
 
   const duplicate = await findDuplicate({ email, username }, null, input);
   if (duplicate) return duplicate;
@@ -32,9 +43,21 @@ export async function createUserAction(_prevState, formData) {
       userId: user.id,
       providerId: "credential",
       accountId: user.id,
-      password: await ctx.password.hash(password), 
+      password: await ctx.password.hash(password), // bcrypt.hash()
     });
-    await query(`UPDATE users SET role = $1 WHERE id = $2`, [role, user.id]);
+    // Better Auth selalu membuat akun sebagai student; Admin lalu menetapkan role.
+    await withTransaction(async (client) => {
+      await client.query(`UPDATE users SET role = $1 WHERE id = $2`, [role, user.id]);
+      // Teacher yang dibuat Admin langsung tercatat sebagai pengajuan yang disetujui,
+      // sehingga datanya sama dengan Teacher yang mendaftar sendiri lalu di-approve.
+      if (role === ROLES.TEACHER) {
+        await client.query(
+          `INSERT INTO teacher_applications (user_id, expertise, experience, motivation, status, approved_at, approved_by)
+           VALUES ($1, $2, $3, $4, 'approved', NOW(), $5)`,
+          [user.id, expertise, experience, motivation, admin.id],
+        );
+      }
+    });
   } catch (err) {
     console.error("[users] create", err);
     if (createdUserId) await query(`DELETE FROM users WHERE id = $1`, [createdUserId]);
@@ -52,14 +75,33 @@ export async function updateUserAction(userId, _prevState, formData) {
   const input = formDataToObject(formData);
   const parsed = updateUserSchema.safeParse(input);
   if (!parsed.success) return validationError(parsed.error, input);
-  const { name, username, email, password, role } = parsed.data;
+  const { name, username, email, password } = parsed.data;
 
   const target = await queryOne(`SELECT id, role FROM users WHERE id = $1`, [userId]);
   if (!target) return actionError("User tidak ditemukan.", {}, input);
-  if (userId === admin.id && role !== ROLES.ADMIN) {
-    return actionError("Anda tidak dapat menurunkan role akun Anda sendiri.", { role: ["Role akun sendiri harus tetap Admin."] }, input);
+
+  // Akun Admin disediakan langsung oleh sistem: role-nya tidak diubah lewat form,
+  // dan user lain tidak bisa diubah menjadi Admin (ROLE_VALUES hanya student/teacher).
+  const isAdminAccount = target.role === ROLES.ADMIN;
+  const role = isAdminAccount ? ROLES.ADMIN : parsed.data.role;
+  if (!role) return actionError("Periksa kembali data yang Anda isi.", { role: ["Role wajib dipilih."] }, input);
+
+  const becomesTeacher = target.role === ROLES.STUDENT && role === ROLES.TEACHER;
+  const becomesStudent = target.role === ROLES.TEACHER && role === ROLES.STUDENT;
+
+  // Student -> Teacher: wajib mengisi data yang sama seperti form register Teacher.
+  let teacherData = null;
+  if (becomesTeacher) {
+    const teacher = teacherApplicationSchema.safeParse(input);
+    if (!teacher.success) return validationError(teacher.error, input);
+    teacherData = teacher.data;
+    const category = await queryOne(`SELECT 1 AS ok FROM categories WHERE name = $1`, [teacherData.expertise]);
+    if (!category) return actionError("Periksa kembali isian Anda.", { expertise: ["Bidang keahlian tidak valid."] }, input);
   }
-  if (target.role === ROLES.TEACHER && role !== ROLES.TEACHER) {
+
+  // Teacher -> Student: Teacher yang masih punya course tidak boleh diganti role-nya,
+  // agar tidak ada course yang instrukturnya bukan Teacher.
+  if (becomesStudent) {
     const owned = await queryOne(`SELECT COUNT(*)::int AS total FROM courses WHERE teacher_id = $1`, [userId]);
     if (owned.total > 0) {
       return actionError(
@@ -79,13 +121,35 @@ export async function updateUserAction(userId, _prevState, formData) {
         `UPDATE users SET name = $1, username = $2, email = $3, role = $4 WHERE id = $5`,
         [name, username, email, role, userId],
       );
-      if (role === ROLES.TEACHER && target.role !== ROLES.TEACHER) {
-        await client.query(
+
+      if (becomesTeacher) {
+        // Pengajuan pending (jika ada) diperbarui lalu disetujui; jika tidak ada,
+        // dibuat pengajuan baru yang langsung disetujui. approved_at selalu tercatat.
+        const { rowCount } = await client.query(
           `UPDATE teacher_applications
-              SET status = 'approved', approved_at = NOW(), approved_by = $2
+              SET expertise = $2, experience = $3, motivation = $4,
+                  status = 'approved', approved_at = NOW(), approved_by = $5
             WHERE user_id = $1 AND status = 'pending'`,
-          [userId, admin.id],
+          [userId, teacherData.expertise, teacherData.experience, teacherData.motivation, admin.id],
         );
+        if (rowCount === 0) {
+          await client.query(
+            `INSERT INTO teacher_applications (user_id, expertise, experience, motivation, status, approved_at, approved_by)
+             VALUES ($1, $2, $3, $4, 'approved', NOW(), $5)`,
+            [userId, teacherData.expertise, teacherData.experience, teacherData.motivation, admin.id],
+          );
+        }
+        await client.query(
+          `INSERT INTO notifications (user_id, type, title, message, link)
+           VALUES ($1, 'teacher_approved', 'Selamat, Anda resmi menjadi Teacher!',
+                   'Admin telah mengubah akun Anda menjadi Teacher. Mulai buat course pertama Anda.', '/teacher')`,
+          [userId],
+        );
+      }
+
+      if (becomesStudent) {
+        // Student tidak punya bidang keahlian, pengalaman, dan motivasi.
+        await client.query(`DELETE FROM teacher_applications WHERE user_id = $1`, [userId]);
       }
     });
 
@@ -114,6 +178,7 @@ export async function deleteUserAction(userId) {
     revalidatePath("/admin");
     return actionSuccess(`User ${result.rows[0].name} berhasil dihapus.`);
   } catch (err) {
+    // courses.teacher_id ON DELETE RESTRICT
     return actionError(getDbErrorMessage(err, "Gagal menghapus user."));
   }
 }
