@@ -8,7 +8,7 @@ import { queryMany, queryOne } from "@/lib/db";
  */
 
 const CATALOG_COLUMNS = `
-  id, title, slug, description, start_date, end_date, thumbnail_url, created_at,
+  id, title, slug, description, start_date, end_date, thumbnail_url, is_active, created_at,
   category_id, category_name, category_slug,
   teacher_id, teacher_name, teacher_username, teacher_headline,
   content_count, student_count`;
@@ -32,6 +32,7 @@ export async function searchCourses({ search = "", categorySlug = "" } = {}) {
       WHERE ($1::text IS NULL
              OR title ILIKE $1 OR description ILIKE $1 OR teacher_name ILIKE $1)
         AND ($2::text IS NULL OR category_slug = $2)
+        AND is_active
       ORDER BY student_count DESC, title ASC`,
     [pattern, categorySlug || null],
   );
@@ -65,6 +66,7 @@ export async function getProgramCourses(limit = 4) {
          SELECT DISTINCT ON (v.category_id) ${prefixed("v")}, cat.created_at AS category_created_at
            FROM v_course_catalog v
            JOIN categories cat ON cat.id = v.category_id
+          WHERE v.is_active
           ORDER BY v.category_id, v.created_at, v.id
        ) program
       ORDER BY category_created_at
@@ -89,7 +91,7 @@ export async function getCategoriesWithCourseCount() {
 export async function getPlatformStats() {
   return queryOne(
     `SELECT
-        (SELECT COUNT(*) FROM courses)::int                    AS course_count,
+        (SELECT COUNT(*) FROM courses WHERE is_active)::int    AS course_count,
         (SELECT COUNT(*) FROM users WHERE role = 'teacher')::int AS teacher_count,
         (SELECT COUNT(*) FROM users WHERE role = 'student')::int AS student_count`,
   );

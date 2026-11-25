@@ -2,7 +2,7 @@ import { query } from "@/lib/db";
 
 export const ACTIVITY_LOGS_PER_PAGE = 15;
 
-export const ACTIVITY_ACTIONS = ["create", "update", "delete", "approve", "reject", "role_change"];
+export const ACTIVITY_ACTIONS = ["create", "update", "delete", "approve", "reject", "role_change", "activate", "deactivate"];
 export const ACTIVITY_ENTITIES = ["user", "course", "category", "teacher_application"];
 
 /** Riwayat Aktivitas untuk Admin, terbaru lebih dulu. */

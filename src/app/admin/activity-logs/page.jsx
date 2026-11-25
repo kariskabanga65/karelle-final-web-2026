@@ -20,6 +20,8 @@ const ACTION_LABELS = {
   approve: "Setujui",
   reject: "Tolak",
   role_change: "Ubah role",
+  activate: "Aktifkan",
+  deactivate: "Nonaktifkan",
 };
 
 const ACTION_STYLES = {
@@ -29,6 +31,8 @@ const ACTION_STYLES = {
   approve: "border-success/30 bg-success/10 text-success",
   reject: "border-destructive/30 bg-destructive/10 text-destructive",
   role_change: "border-warning/30 bg-warning/10 text-warning",
+  activate: "border-success/30 bg-success/10 text-success",
+  deactivate: "border-warning/30 bg-warning/10 text-warning",
 };
 
 const ENTITY_LABELS = {

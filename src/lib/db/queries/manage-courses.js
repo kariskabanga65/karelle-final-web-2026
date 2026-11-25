@@ -1,13 +1,17 @@
 import "server-only";
 import { queryMany, queryOne } from "@/lib/db";
 
-
+/**
+ * Daftar course untuk halaman kelola.
+ * teacherId diisi  -> hanya course milik Teacher tersebut.
+ * teacherId null   -> semua course (Admin).
+ */
 export async function listManagedCourses({ teacherId = null, search = "" } = {}) {
   const keyword = search.trim().slice(0, 100);
   const pattern = keyword ? `%${keyword.replace(/[\\%_]/g, "\\$&")}%` : null;
   return queryMany(
     `SELECT id, title, slug, category_name, teacher_id, teacher_name,
-            start_date, end_date, content_count, student_count, created_at
+            start_date, end_date, is_active, content_count, student_count, created_at
        FROM v_course_catalog
       WHERE ($1::text IS NULL OR teacher_id = $1)
         AND ($2::text IS NULL OR title ILIKE $2 OR teacher_name ILIKE $2)
@@ -16,7 +20,7 @@ export async function listManagedCourses({ teacherId = null, search = "" } = {})
   );
 }
 
-
+/** Data course untuk form edit. */
 export async function getCourseForEdit(id) {
   return queryOne(
     `SELECT id, title, slug, description, category_id, teacher_id, start_date, end_date, thumbnail_url

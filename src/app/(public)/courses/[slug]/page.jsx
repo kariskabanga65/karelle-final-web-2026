@@ -14,7 +14,7 @@ import { formatCoursePeriod, getCategoryImage } from "@/lib/utils/format";
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const course = await getCourseBySlug(slug);
-  return { title: course ? `${course.title} | KARÉLLE` : "Course tidak ditemukan | KARÉLLE" };
+  return { title: course?.is_active ? `${course.title} | KARÉLLE` : "Course | KARÉLLE" };
 }
 
 export default async function CourseDetailPage({ params }) {
@@ -31,6 +31,11 @@ export default async function CourseDetailPage({ params }) {
   const teacher = teachers.find((item) => item.id === course.teacher_id);
   const viewer = user ? { id: user.id, role: user.role } : null;
 
+  // Course nonaktif disembunyikan dari publik. Hanya Admin, Teacher pemiliknya,
+  // dan student yang sudah terdaftar yang masih bisa melihatnya.
+  const canSeeInactive = user && (user.role === "admin" || user.id === course.teacher_id || enrollments.has(course.id));
+  if (!course.is_active && !canSeeInactive) notFound();
+
   return (
     <>
       <section className="relative overflow-hidden bg-ink text-white">
@@ -43,6 +48,11 @@ export default async function CourseDetailPage({ params }) {
             showIcon
             className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
           />
+          {!course.is_active && (
+            <p className="rounded-md border border-white/30 bg-white/10 px-3 py-1.5 text-sm text-white">
+              Course ini sedang dinonaktifkan: tidak tampil di katalog dan tidak menerima student baru.
+            </p>
+          )}
           <Badge className="bg-white text-ink">{course.category_name}</Badge>
           <h1 className="display-title max-w-4xl text-5xl sm:text-6xl">{course.title}</h1>
           <p className="max-w-2xl text-lg text-white/70">{course.description}</p>

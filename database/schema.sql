@@ -177,6 +177,7 @@ CREATE TABLE courses (
     start_date     DATE,                                -- NULL = lifetime access
     end_date       DATE,                                -- NULL = lifetime access
     thumbnail_url  TEXT,
+    is_active      BOOLEAN     NOT NULL DEFAULT TRUE,     -- FALSE = dinonaktifkan (bisa diaktifkan lagi)
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -467,7 +468,7 @@ CREATE TABLE activity_logs (
     actor_id      TEXT        REFERENCES users (id) ON DELETE SET NULL,
     actor_name    TEXT        NOT NULL,
     actor_role    TEXT        NOT NULL,
-    action        TEXT        NOT NULL,   -- create | update | delete | approve | reject | role_change
+    action        TEXT        NOT NULL,   -- create | update | delete | approve | reject | role_change | activate | deactivate
     entity_type   TEXT        NOT NULL,   -- user | course | category | teacher_application
     entity_id     TEXT,
     entity_label  TEXT        NOT NULL,
@@ -475,7 +476,7 @@ CREATE TABLE activity_logs (
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT activity_logs_action_check
-        CHECK (action IN ('create', 'update', 'delete', 'approve', 'reject', 'role_change')),
+        CHECK (action IN ('create', 'update', 'delete', 'approve', 'reject', 'role_change', 'activate', 'deactivate')),
     CONSTRAINT activity_logs_entity_check
         CHECK (entity_type IN ('user', 'course', 'category', 'teacher_application'))
 );
@@ -490,6 +491,7 @@ SELECT
     c.start_date,
     c.end_date,
     c.thumbnail_url,
+    c.is_active,
     c.created_at,
     c.category_id,
     cat.name     AS category_name,

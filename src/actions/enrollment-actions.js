@@ -30,11 +30,13 @@ export async function enrollCourseAction(courseId) {
   try {
     const result = await withTransaction(async (client) => {
       const { rows } = await client.query(
-        `SELECT id, title, teacher_id FROM courses WHERE id = $1`,
+        `SELECT id, title, teacher_id, is_active FROM courses WHERE id = $1`,
         [parsed.data],
       );
       const course = rows[0];
       if (!course) return { notFound: true };
+      // Course nonaktif tidak menerima student baru.
+      if (!course.is_active) return { inactive: true };
 
       const inserted = await client.query(
         `INSERT INTO enrollments (student_id, course_id)
@@ -54,6 +56,7 @@ export async function enrollCourseAction(courseId) {
     });
 
     if (result.notFound) return actionError("Course tidak ditemukan.");
+    if (result.inactive) return actionError("Course ini sedang dinonaktifkan dan belum menerima student baru.");
     if (result.alreadyEnrolled) return actionError("Anda sudah mengikuti course ini.");
 
     revalidatePath("/courses");

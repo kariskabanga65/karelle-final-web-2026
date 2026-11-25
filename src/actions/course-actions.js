@@ -148,6 +148,40 @@ export async function deleteCourseAction(courseId) {
   }
 }
 
+/**
+ * Nonaktifkan / aktifkan kembali course (Admin, atau Teacher pemiliknya).
+ * Berbeda dengan hapus: data course tetap utuh, hanya disembunyikan dari
+ * katalog publik dan tidak menerima student baru.
+ */
+export async function toggleCourseActiveAction(courseId) {
+  const { user, error } = await authorizeAction([ROLES.TEACHER]);
+  if (error) return error;
+  if (!isUuid(courseId)) return actionError("Course tidak valid.");
+
+  try {
+    const result = await query(
+      `UPDATE courses SET is_active = NOT is_active
+        WHERE id = $1 AND ($2::text IS NULL OR teacher_id = $2)
+        RETURNING title, is_active`,
+      [courseId, ownerFilter(user)],
+    );
+    if (result.rowCount === 0) return actionError("Course tidak ditemukan atau bukan milik Anda.");
+    const { title, is_active: isActive } = result.rows[0];
+    await logActivity({
+      actor: user,
+      action: isActive ? "activate" : "deactivate",
+      entityType: "course",
+      entityId: courseId,
+      entityLabel: title,
+      details: { status: { dari: isActive ? "nonaktif" : "aktif", menjadi: isActive ? "aktif" : "nonaktif" } },
+    });
+    revalidateCourses();
+    return actionSuccess(isActive ? `Course "${title}" diaktifkan kembali.` : `Course "${title}" dinonaktifkan.`);
+  } catch (err) {
+    return actionError(getDbErrorMessage(err, "Gagal mengubah status course."));
+  }
+}
+
 // ---------------------------------------------------------------
 const isAdmin = (user) => user.role === ROLES.ADMIN;
 const basePath = (user) => (isAdmin(user) ? "/admin" : "/teacher");
